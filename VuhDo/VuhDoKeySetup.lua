@@ -58,6 +58,10 @@ local VUHDO_REZ_SPELLS_NAMES = {
 	[VUHDO_SPELL_ID_REBIRTH] = true,
 	[VUHDO_SPELL_ID_RESURRECTION] = true,
 };
+-- Added outside the constructor: a nil key there would stop this whole file from loading
+if (VUHDO_SPELL_ID_RECLAIM_SOUL ~= nil) then
+	VUHDO_REZ_SPELLS_NAMES[VUHDO_SPELL_ID_RECLAIM_SOUL] = true;
+end
 
 
 

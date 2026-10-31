@@ -711,7 +711,7 @@ local function VUHDO_addUnitToRole(aUnit)
 
 	tinsert(VUHDO_GROUPS[tRole], aUnit);
 
-	if(tRole == 63 or tRole == 62) then -- VUHDO_ID_RANGED_HEAL -- VUHDO_ID_RANGED_DAMAGE
+	if(tRole == 63 or tRole == 62 or tRole == 64) then -- VUHDO_ID_RANGED_HEAL -- VUHDO_ID_RANGED_DAMAGE -- VUHDO_ID_SUPPORT
 		tinsert(VUHDO_GROUPS[51], aUnit); -- VUHDO_ID_RANGED
 	elseif(tRole == 61 or tRole == 60) then -- VUHDO_ID_MELEE_DAMAGE -- VUHDO_ID_MELEE_TANK
 		tinsert(VUHDO_GROUPS[50], aUnit); -- VUHDO_ID_MELEE

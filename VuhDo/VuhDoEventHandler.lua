@@ -169,6 +169,13 @@ function VUHDO_OnLoad(anInstance)
 	anInstance:RegisterEvent("UNIT_MAXHEALTH");
 	anInstance:RegisterEvent("UNIT_AURA");
 	anInstance:RegisterEvent("UNIT_TARGET");
+	-- Fired by the CoA (Ascension) client only
+	if (VUHDO_isClientHealPrediction()) then
+		anInstance:RegisterEvent("UNIT_HEAL_PREDICTION");
+	end
+	if (VUHDO_isClientAbsorbs()) then
+		anInstance:RegisterEvent("UNIT_ABSORB_AMOUNT_CHANGED");
+	end
 
 	anInstance:RegisterEvent("PLAYER_REGEN_ENABLED");
 	anInstance:RegisterEvent("RAID_ROSTER_UPDATE");
@@ -421,6 +428,11 @@ function VUHDO_OnEvent(anInstance, anEvent, anArg1, anArg2, anArg3, anArg4, _, a
 		if ((VUHDO_RAID or tEmptyRaid)[anArg1] ~= nil) then
 			VUHDO_updateHealth(anArg1, 2); -- VUHDO_UPDATE_HEALTH
 		end
+	elseif ("UNIT_HEAL_PREDICTION" == anEvent
+		or "UNIT_ABSORB_AMOUNT_CHANGED" == anEvent) then
+		if (VUHDO_VARIABLES_LOADED and (VUHDO_RAID or tEmptyRaid)[anArg1] ~= nil) then
+			VUHDO_updateHealthBarsFor(anArg1, 9); -- VUHDO_UPDATE_INC
+		end
 	elseif ("UNIT_MANA" == anEvent
 		or "UNIT_ENERGY" == anEvent
 		or "UNIT_RAGE" == anEvent
@@ -486,6 +498,9 @@ function VUHDO_OnEvent(anInstance, anEvent, anArg1, anArg2, anArg3, anArg4, _, a
 	elseif ("RAID_TARGET_UPDATE" == anEvent) then
 		VUHDO_TIMERS["CUSTOMIZE"] = 0.1;
 	elseif ("PLAYER_REGEN_ENABLED" == anEvent) then
+		if (VUHDO_MACROS_PENDING) then
+			VUHDO_initKeyboardMacros();
+		end
 		if (not VUHDO_isReloadPending()) then
 			VUHDO_quickRaidReload();
 		end

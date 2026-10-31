@@ -1,6 +1,7 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
   <Script file="VuhDoNewOptionsBuffs.lua" />
+  <Include file="VuhDoNewOptionsBuffsCustom.xml" />
 
   <Frame name="VuhDoNewOptionsBuffsTemplate" virtual="true">
     <Frames>
@@ -97,6 +98,26 @@
 					    </OnLoad>
   					</Scripts>
           </CheckButton>
+
+          <CheckButton name="$parentOptionsCustomRadioButton" text="VUHDO_I18N_CUSTOM_BUFFS_TAB" inherits="VuhDoRadioButtonTemplate">
+            <Anchors>
+              <Anchor point="TOPLEFT">
+                <Offset>
+                  <AbsDimension x="3" y="-155" />
+                </Offset>
+              </Anchor>
+            </Anchors>
+						<Scripts>
+					    <OnClick>
+					    	VUHDO_newOptionsBuffsCustomClicked(self);
+					    	VUHDO_lnfRadioButtonClicked(self);
+					    </OnClick>
+					    <OnLoad>
+					    	VUHDO_lnfCheckButtonOnLoad(self);
+					    	VUHDO_lnfSetTooltip(self, VUHDO_I18N_TT_CUSTOM_BUFFS_TAB);
+					    </OnLoad>
+  					</Scripts>
+          </CheckButton>
         </Frames>
       </Frame>
 
@@ -119,6 +140,8 @@
         	<Frame name="VuhDoNewOptionsBuffsColors" hidden="true" setAllPoints="true" inherits="VuhDoNewOptionsBuffsColorsTemplate">
         	</Frame>
         	<Frame name="VuhDoNewOptionsBuffsRebuff" hidden="true" setAllPoints="true" inherits="VuhDoNewOptionsBuffsRebuffTemplate">
+        	</Frame>
+        	<Frame name="VuhDoNewOptionsBuffsCustom" hidden="true" setAllPoints="true" inherits="VuhDoNewOptionsBuffsCustomTemplate">
         	</Frame>
         </Frames>
       </Frame>

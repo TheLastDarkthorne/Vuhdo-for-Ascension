@@ -1,0 +1,261 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+  <Script file="VuhDoNewOptionsBuffsCustom.lua" />
+
+  <Frame name="VuhDoNewOptionsBuffsCustomTemplate" virtual="true">
+    <Frames>
+
+      <Frame name="$parentAddPanel" inherits="VuhDoPanelTemplate">
+        <Size>
+          <AbsDimension x="390" y="165" />
+        </Size>
+        <Anchors>
+          <Anchor point="TOPLEFT">
+            <Offset>
+              <AbsDimension x="20" y="-20" />
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Frames>
+
+          <Frame name="$parentTitleLabel" inherits="VuhDoLabelFrameTemplate">
+            <Size>
+              <AbsDimension x="200" y="18" />
+            </Size>
+            <Anchors>
+              <Anchor point="TOPLEFT">
+                <Offset>
+                  <AbsDimension x="13" y="-7" />
+                </Offset>
+              </Anchor>
+            </Anchors>
+            <Layers>
+              <Layer>
+                <FontString name="$parentLabel" text="VUHDO_I18N_CUSTOM_BUFF_ADD_TITLE" inherits="VuDoDefaultTitleFontTemplate">
+                </FontString>
+              </Layer>
+            </Layers>
+          </Frame>
+
+          <Frame name="$parentSpellLabel" inherits="VuhDoLabelFrameTemplate">
+            <Size>
+              <AbsDimension x="200" y="18" />
+            </Size>
+            <Anchors>
+              <Anchor point="TOPLEFT">
+                <Offset>
+                  <AbsDimension x="18" y="-32" />
+                </Offset>
+              </Anchor>
+            </Anchors>
+            <Layers>
+              <Layer>
+                <FontString name="$parentLabel" text="VUHDO_I18N_CUSTOM_BUFF_SPELL" justifyH="LEFT" inherits="VuDoDefaultFontTemplate">
+                </FontString>
+              </Layer>
+            </Layers>
+          </Frame>
+
+          <EditBox name="$parentSpellEditBox" inherits="VuhDoEditBoxTemplate">
+            <Size>
+              <AbsDimension x="190" y="32" />
+            </Size>
+            <Anchors>
+              <Anchor point="TOPLEFT">
+                <Offset>
+                  <AbsDimension x="18" y="-46" />
+                </Offset>
+              </Anchor>
+            </Anchors>
+            <Scripts>
+              <OnLoad>
+                VUHDO_lnfSetTooltip(self, VUHDO_I18N_TT_CUSTOM_BUFF_SPELL);
+              </OnLoad>
+              <OnEnterPressed>
+                VUHDO_customBuffAddClicked(self:GetParent());
+              </OnEnterPressed>
+            </Scripts>
+          </EditBox>
+
+          <Frame name="$parentTargetLabel" inherits="VuhDoLabelFrameTemplate">
+            <Size>
+              <AbsDimension x="150" y="18" />
+            </Size>
+            <Anchors>
+              <Anchor point="TOPLEFT">
+                <Offset>
+                  <AbsDimension x="225" y="-32" />
+                </Offset>
+              </Anchor>
+            </Anchors>
+            <Layers>
+              <Layer>
+                <FontString name="$parentLabel" text="VUHDO_I18N_CUSTOM_BUFF_TARGET" justifyH="LEFT" inherits="VuDoDefaultFontTemplate">
+                </FontString>
+              </Layer>
+            </Layers>
+          </Frame>
+
+          <!-- The combo template draws its art 17 px above its anchor, 150 px wide -->
+          <Button name="$parentTargetComboBox" inherits="VuhDoComboBoxTemplate">
+            <Size>
+              <AbsDimension x="150" y="32" />
+            </Size>
+            <Anchors>
+              <Anchor point="TOPLEFT">
+                <Offset>
+                  <AbsDimension x="225" y="-67" />
+                </Offset>
+              </Anchor>
+            </Anchors>
+            <Scripts>
+              <OnLoad>
+                VUHDO_setComboModel(self, "VUHDO_CUSTOM_BUFF_TARGET", VUHDO_CUSTOM_BUFF_TARGET_COMBO);
+                VUHDO_lnfSetTooltip(self, VUHDO_I18N_TT_CUSTOM_BUFF_TARGET);
+              </OnLoad>
+            </Scripts>
+          </Button>
+
+          <Frame name="$parentHint">
+            <Size>
+              <AbsDimension x="362" y="36" />
+            </Size>
+            <Anchors>
+              <Anchor point="TOPLEFT">
+                <Offset>
+                  <AbsDimension x="15" y="-84" />
+                </Offset>
+              </Anchor>
+            </Anchors>
+            <Layers>
+              <Layer>
+                <FontString name="$parentLabel" setAllPoints="true" text="VUHDO_I18N_CUSTOM_BUFF_HINT" justifyH="LEFT" justifyV="TOP" inherits="VuDoDefaultFontTemplate">
+                </FontString>
+              </Layer>
+            </Layers>
+            <Scripts>
+              <OnShow>VUHDO_lnfPatchFont(self, "Label");</OnShow>
+            </Scripts>
+          </Frame>
+
+          <Button name="$parentAddButton" text="VUHDO_I18N_CUSTOM_BUFF_ADD" inherits="VuhDoButtonTemplate">
+            <Size>
+              <AbsDimension x="100" y="32" />
+            </Size>
+            <Anchors>
+              <Anchor point="TOPLEFT">
+                <Offset>
+                  <AbsDimension x="13" y="-122" />
+                </Offset>
+              </Anchor>
+            </Anchors>
+            <Scripts>
+              <OnClick>
+                VUHDO_customBuffAddClicked(self:GetParent());
+              </OnClick>
+            </Scripts>
+          </Button>
+
+        </Frames>
+      </Frame>
+
+      <Frame name="$parentListPanel" inherits="VuhDoPanelTemplate">
+        <Size>
+          <AbsDimension x="390" y="125" />
+        </Size>
+        <Anchors>
+          <Anchor point="TOPLEFT">
+            <Offset>
+              <AbsDimension x="20" y="-200" />
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Frames>
+
+          <Frame name="$parentTitleLabel" inherits="VuhDoLabelFrameTemplate">
+            <Size>
+              <AbsDimension x="200" y="18" />
+            </Size>
+            <Anchors>
+              <Anchor point="TOPLEFT">
+                <Offset>
+                  <AbsDimension x="13" y="-7" />
+                </Offset>
+              </Anchor>
+            </Anchors>
+            <Layers>
+              <Layer>
+                <FontString name="$parentLabel" text="VUHDO_I18N_CUSTOM_BUFF_LIST_TITLE" inherits="VuDoDefaultTitleFontTemplate">
+                </FontString>
+              </Layer>
+            </Layers>
+          </Frame>
+
+          <Button name="$parentSelectComboBox" inherits="VuhDoScrollComboBoxTemplate">
+            <Size>
+              <AbsDimension x="230" y="32" />
+            </Size>
+            <Anchors>
+              <Anchor point="TOPLEFT">
+                <Offset>
+                  <AbsDimension x="18" y="-50" />
+                </Offset>
+              </Anchor>
+            </Anchors>
+            <Scripts>
+              <OnShow>
+                VUHDO_lnfPatchFont(self, "Text");
+                VUHDO_setupCustomBuffsComboModel(self);
+              </OnShow>
+              <OnLoad>
+                self:SetAttribute("custom_function", VUHDO_customBuffListSelected);
+              </OnLoad>
+            </Scripts>
+          </Button>
+
+          <Button name="$parentRemoveButton" text="VUHDO_I18N_DELETE" inherits="VuhDoButtonTemplate">
+            <Size>
+              <AbsDimension x="100" y="32" />
+            </Size>
+            <Anchors>
+              <Anchor point="TOPLEFT">
+                <Offset>
+                  <AbsDimension x="270" y="-29" />
+                </Offset>
+              </Anchor>
+            </Anchors>
+            <Scripts>
+              <OnClick>
+                VUHDO_customBuffRemoveClicked();
+              </OnClick>
+            </Scripts>
+          </Button>
+
+          <Frame name="$parentInfo">
+            <Size>
+              <AbsDimension x="362" y="40" />
+            </Size>
+            <Anchors>
+              <Anchor point="TOPLEFT">
+                <Offset>
+                  <AbsDimension x="15" y="-78" />
+                </Offset>
+              </Anchor>
+            </Anchors>
+            <Layers>
+              <Layer>
+                <FontString name="$parentLabel" setAllPoints="true" text="VUHDO_I18N_CUSTOM_BUFF_INFO" justifyH="LEFT" justifyV="TOP" inherits="VuDoDefaultFontTemplate">
+                </FontString>
+              </Layer>
+            </Layers>
+            <Scripts>
+              <OnShow>VUHDO_lnfPatchFont(self, "Label");</OnShow>
+            </Scripts>
+          </Frame>
+
+        </Frames>
+      </Frame>
+
+    </Frames>
+  </Frame>
+</Ui>

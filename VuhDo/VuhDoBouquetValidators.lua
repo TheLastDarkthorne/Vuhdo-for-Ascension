@@ -66,6 +66,7 @@ local VUHDO_ICONS_BY_ROLE = {
 	[VUHDO_ID_MELEE_DAMAGE] = "Interface\\AddOns\\VuhDo\\Images\\roleicons\\damage",
 	[VUHDO_ID_RANGED_DAMAGE] = "Interface\\AddOns\\VuhDo\\Images\\roleicons\\damage",
 	[VUHDO_ID_RANGED_HEAL] = "Interface\\AddOns\\VuhDo\\Images\\roleicons\\healer",
+	[VUHDO_ID_SUPPORT] = "Interface\\AddOns\\VuhDo\\Images\\roleicons\\support",
 };
 
 

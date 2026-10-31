@@ -10,6 +10,15 @@ local ipairs = ipairs;
 local twipe = table.wipe;
 local tsort = table.sort;
 
+-- Sort order for VUHDO_SORT_RAID_ROLE: tanks, healers, supports, melee, ranged
+local VUHDO_ROLE_SORT_PRIORITY = {
+	[60] = 1, -- VUHDO_ID_MELEE_TANK
+	[63] = 2, -- VUHDO_ID_RANGED_HEAL
+	[64] = 3, -- VUHDO_ID_SUPPORT
+	[61] = 4, -- VUHDO_ID_MELEE_DAMAGE
+	[62] = 5, -- VUHDO_ID_RANGED_DAMAGE
+};
+
 
 
 -- BURST CACHE ---------------------------------------------------
@@ -256,6 +265,27 @@ local VUHDO_RAID_SORTERS = {
 						return tFirstIdx < tSecondIdx;
 					else
 						tInfo1, tInfo2 = VUHDO_RAID[aUnitId] or tEmpty, VUHDO_RAID[anotherUnitId] or tEmpty;
+						return (tInfo1["name"] or "") < (tInfo2["name"] or "");
+					end
+				end
+			end,
+
+	[VUHDO_SORT_RAID_ROLE]
+		= function(aUnitId, anotherUnitId)
+				if (sIsPlayerFirst and aUnitId == "player") then
+					return true;
+				elseif (sIsPlayerFirst and anotherUnitId == "player") then
+					return false;
+				else
+					if (VUHDO_PANEL_SETUP[sPanelNum]["MODEL"]["isReverse"]) then
+						aUnitId, anotherUnitId = anotherUnitId, aUnitId;
+					end
+					tInfo1, tInfo2 = VUHDO_RAID[aUnitId] or tEmpty, VUHDO_RAID[anotherUnitId] or tEmpty;
+					tFirstIdx = VUHDO_ROLE_SORT_PRIORITY[tInfo1["role"]] or 6;
+					tSecondIdx = VUHDO_ROLE_SORT_PRIORITY[tInfo2["role"]] or 6;
+					if (tFirstIdx ~= tSecondIdx) then
+						return tFirstIdx < tSecondIdx;
+					else
 						return (tInfo1["name"] or "") < (tInfo2["name"] or "");
 					end
 				end

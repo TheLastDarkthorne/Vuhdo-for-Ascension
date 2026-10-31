@@ -234,6 +234,15 @@ function VUHDO_playerTargetDropDown_Initialize(aFrame, aLevel)
 	UIDropDownMenu_AddButton(tInfo);
 
 	tInfo = UIDropDownMenu_CreateInfo();
+	tInfo.text = VUHDO_I18N_SUPPORTS;
+	tInfo.checked = VUHDO_MANUAL_ROLES[tName] == VUHDO_ID_SUPPORT;
+	tInfo.arg1 = VUHDO_ID_SUPPORT;
+	tInfo.arg2 = tName;
+	tInfo.func = VUHDO_roleOverrideSelected;
+	tInfo.disabled = false;
+	UIDropDownMenu_AddButton(tInfo);
+
+	tInfo = UIDropDownMenu_CreateInfo();
 	tInfo.text = VUHDO_I18N_AUTO_DETECT;
 	tInfo.checked = VUHDO_MANUAL_ROLES[tName] == nil;
 	tInfo.arg1 = nil;

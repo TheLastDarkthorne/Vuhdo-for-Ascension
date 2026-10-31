@@ -228,16 +228,113 @@ end
 
 
 --
+local VUHDO_ABSORB_BOUQUET_COLORS = { };
+local VUHDO_OVERSHIELD_PIXELS = 3;
+local tAmountAbsorb;
+local tHealthPercent;
+local tAbsorbPercent;
+local tAbsorbColor;
+local tAbsorbBar;
+local tOvershieldBar;
+local tBarLength;
+local tMarkPercent;
+local function _VUHDO_updateAbsorb(aUnit)
+	tInfo = VUHDO_RAID[aUnit];
+	tAllButtons = VUHDO_getUnitButtons(VUHDO_resolveVehicleUnit(aUnit));
+
+	if (tInfo == nil or tAllButtons == nil) then
+		return;
+	end
+
+	tAmountAbsorb = VUHDO_getUnitAbsorbs(aUnit);
+	if (tAmountAbsorb > 0 and tInfo["connected"] and not tInfo["dead"] and tInfo["healthmax"] > 0) then
+		tHealthPercent = 100 * tInfo["health"] / tInfo["healthmax"];
+		tAbsorbPercent = 100 * tAmountAbsorb / tInfo["healthmax"];
+	else
+		tAbsorbPercent = 0;
+	end
+
+	if (tAbsorbPercent > 0) then
+		tAbsorbColor = VUHDO_ABSORB_BOUQUET_COLORS[aUnit] or VUHDO_PANEL_SETUP["BAR_COLORS"]["ABSORB"];
+
+		for _, tButton in pairs(tAllButtons) do
+			-- Shield fills the missing health, starting where health ends
+			tAbsorbBar = VUHDO_getHealthBar(tButton, 17);
+			tAbsorbBar:SetValueRange(tHealthPercent, tHealthPercent + tAbsorbPercent);
+			VUHDO_setStatusBarColor(tAbsorbBar, tAbsorbColor);
+
+			-- Mark the full end of the bar when the shield is bigger than the missing health
+			tOvershieldBar = VUHDO_getHealthBar(tButton, 18);
+			if (tHealthPercent + tAbsorbPercent > 100) then
+				if ((tOvershieldBar["txOrient"] or 1) <= 2) then
+					tBarLength = tOvershieldBar:GetWidth();
+				else
+					tBarLength = tOvershieldBar:GetHeight();
+				end
+
+				if ((tBarLength or 0) > 0) then
+					tMarkPercent = 100 * VUHDO_OVERSHIELD_PIXELS / tBarLength;
+				else
+					tMarkPercent = 3;
+				end
+
+				tOvershieldBar:SetValueRange(100 - tMarkPercent, 100);
+				tOvershieldBar:SetStatusBarColor(tAbsorbColor["R"], tAbsorbColor["G"], tAbsorbColor["B"], 1);
+			else
+				tOvershieldBar:SetValueRange(0, 0);
+			end
+		end
+	else
+		for _, tButton in pairs(tAllButtons) do
+			VUHDO_getHealthBar(tButton, 17):SetValueRange(0, 0);
+			VUHDO_getHealthBar(tButton, 18):SetValueRange(0, 0);
+		end
+	end
+end
+
+
+
+--
 local function VUHDO_updateIncHeal(aUnit)
 	_VUHDO_updateIncHeal(aUnit)
+	_VUHDO_updateAbsorb(aUnit);
 
 	if (UnitIsUnit(aUnit, "target")) then
 		_VUHDO_updateIncHeal("target");
+		_VUHDO_updateAbsorb("target");
 	end
 
 	if (UnitIsUnit(aUnit, "focus")) then
 		_VUHDO_updateIncHeal("focus");
+		_VUHDO_updateAbsorb("focus");
 	end
+end
+
+
+
+--
+function VUHDO_absorbBarBouquetCallback(aUnit, anIsActive, anIcon, aCurrValue, aCounter, aMaxValue, aColor, aBuffName, aBouquetName)
+	if (anIsActive and aColor ~= nil) then
+		if (VUHDO_ABSORB_BOUQUET_COLORS[aUnit] == nil) then
+			VUHDO_ABSORB_BOUQUET_COLORS[aUnit] = { };
+		end
+		tAbsorbColor = VUHDO_ABSORB_BOUQUET_COLORS[aUnit];
+		tAbsorbColor["R"], tAbsorbColor["G"], tAbsorbColor["B"], tAbsorbColor["O"] = aColor["R"], aColor["G"], aColor["B"], aColor["O"];
+		tAbsorbColor["useBackground"], tAbsorbColor["useOpacity"] = aColor["useBackground"], aColor["useOpacity"];
+	else
+		VUHDO_ABSORB_BOUQUET_COLORS[aUnit] = nil;
+	end
+
+	if (VUHDO_RAID ~= nil) then
+		_VUHDO_updateAbsorb(aUnit);
+	end
+end
+
+
+
+--
+function VUHDO_resetAbsorbBouquetColors()
+	twipe(VUHDO_ABSORB_BOUQUET_COLORS);
 end
 
 

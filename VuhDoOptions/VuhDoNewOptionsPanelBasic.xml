@@ -235,7 +235,7 @@
         <Anchors>
           <Anchor point="TOPLEFT">
             <Offset>
-              <AbsDimension x="30" y="-245" />
+              <AbsDimension x="30" y="-275" />
             </Offset>
           </Anchor>
         </Anchors>
@@ -426,7 +426,7 @@
 
       <Frame name="$parentSortPlayerPanel" inherits="VuhDoPanelTemplate">
         <Size>
-          <AbsDimension x="340" y="100" />
+          <AbsDimension x="340" y="130" />
         </Size>
         <Anchors>
           <Anchor point="TOPLEFT">
@@ -568,6 +568,25 @@
               </Layer>
             </Layers>
           </Frame>
+          
+          <CheckButton name="$parentRoleRadioButton" text="VUHDO_I18N_ROLE_SORT" inherits="VuhDoRadioButtonTemplate">
+            <Size>
+              <AbsDimension x="100" y="32" />
+            </Size>
+            <Anchors>
+              <Anchor point="TOPLEFT">
+                <Offset>
+                  <AbsDimension x="10" y="-95" />
+                </Offset>
+              </Anchor>
+            </Anchors>
+			      <Scripts>
+			      	<OnLoad>
+			      		VUHDO_lnfSetRadioModel(self, "VUHDO_PANEL_SETUP.#PNUM#.MODEL.sort", 5);
+			      		VUHDO_lnfSetTooltip(self, VUHDO_I18N_TT_521);
+			      	</OnLoad>
+      			</Scripts>
+          </CheckButton>
         </Frames>
       </Frame>
 
@@ -578,7 +597,7 @@
         <Anchors>
           <Anchor point="TOPLEFT">
             <Offset>
-              <AbsDimension x="240" y="-250" />
+              <AbsDimension x="240" y="-280" />
             </Offset>
           </Anchor>
         </Anchors>

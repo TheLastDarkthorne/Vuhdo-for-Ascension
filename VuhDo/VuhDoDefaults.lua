@@ -619,6 +619,7 @@ local VUHDO_DEFAULT_CONFIG = {
 	["EMERGENCY_TRIGGER"] = 100,
 	["MAX_EMERGENCIES"] = 5,
 	["SHOW_INCOMING"] = true,
+	["SHOW_ABSORB"] = true,
 	["SHOW_OVERHEAL"] = true,
 	["SHOW_OWN_INCOMING"] = true,
 	["SHOW_TEXT_OVERHEAL"] = true,
@@ -1007,6 +1008,12 @@ local VUHDO_DEFAULT_PANEL_SETUP = {
 			["R"] = 0, ["G"] = 0, ["B"] = 0, ["O"] = 0.33,
 			["TR"] = 1, ["TG"] = 0.82, ["TB"] = 0, ["TO"] = 1,
 			["useText"] = false, ["useBackground"] = false,	["useOpacity"] = true,
+		},
+
+		["ABSORB"] = {
+			["R"] = 0.8, ["G"] = 0.9, ["B"] = 1, ["O"] = 0.65,
+			["TR"] = 0.8, ["TG"] = 0.9, ["TB"] = 1, ["TO"] = 1,
+			["useText"] = false, ["useBackground"] = true,	["useOpacity"] = true,
 		},
 
 		["EMERGENCY"] = {
@@ -1684,10 +1691,10 @@ end
 
 --
 function VUHDO_initClassColors()
-	
-	VUHDO_USER_CLASS_COLORS = nil -- THIS WILL RESET CUSTOM CLASS COLORS, BUT WITHOUT IT NEW COLORS DIDNT LOAD FOR ME FOR SOME REASON
-
-	VUHDO_USER_CLASS_COLORS = VUHDO_deepCopyTable(VUHDO_DEFAULT_USER_CLASS_COLORS);
+	-- Keep the player's colors; the sanity check adds any class that is new
+	if (VUHDO_USER_CLASS_COLORS == nil) then
+		VUHDO_USER_CLASS_COLORS = VUHDO_deepCopyTable(VUHDO_DEFAULT_USER_CLASS_COLORS);
+	end
 	VUHDO_USER_CLASS_COLORS = VUHDO_ensureSanity("VUHDO_USER_CLASS_COLORS", VUHDO_USER_CLASS_COLORS, VUHDO_DEFAULT_USER_CLASS_COLORS);
 end
 
@@ -1700,6 +1707,7 @@ function VUHDO_initBuffSettings()
 		VUHDO_BUFF_SETTINGS["CONFIG"] = VUHDO_deepCopyTable(VUHDO_DEFAULT_BUFF_CONFIG);
 	end
 	VUHDO_BUFF_SETTINGS["CONFIG"] = VUHDO_ensureSanity("VUHDO_BUFF_SETTINGS.CONFIG", VUHDO_BUFF_SETTINGS["CONFIG"], VUHDO_DEFAULT_BUFF_CONFIG);
+	VUHDO_initCustomBuffs();
 
 	local _, tPlayerClass = UnitClass("player");
 	local tAllClassBuffs = VUHDO_CLASS_BUFFS[tPlayerClass];
@@ -1737,6 +1745,7 @@ function VUHDO_initBuffSettings()
 			end
 		end
 	end
+	VUHDO_normalizeBuffOrder();
 
 	VUHDO_REFRESH_BUFFS_TIMER = VUHDO_BUFF_SETTINGS["CONFIG"]["REFRESH_SECS"];
 end

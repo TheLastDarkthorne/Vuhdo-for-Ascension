@@ -40,9 +40,8 @@ VUHDO_GROUPS_BUFFS = {
 -- Class => BUff-disjunctive-Group => Buff-Overwriting-Group => BuffName, Target type
 --
 VUHDO_CLASS_BUFFS = {
-	["DRUID"] = {
 	-- Priest
-	-- ["PRIEST"] = {
+	["PRIEST"] = {
 		[VUHDO_I18N_BUFFC_FORTITUDE] = { -- 01
 			{
 				{ VUHDO_SPELL_ID_BUFF_POWER_WORD_FORTITUDE, VUHDO_BUFF_TARGET_SINGLE },
@@ -96,10 +95,10 @@ VUHDO_CLASS_BUFFS = {
 				{ VUHDO_SPELL_ID_PAIN_SUPPRESSION, VUHDO_BUFF_TARGET_UNIQUE },
 			}
 		},
-	-- },
+	},
 
 	-- Shaman
-	-- ["SHAMAN"] = {
+	["SHAMAN"] = {
 		[VUHDO_I18N_BUFFC_FIRE_TOTEM] = { -- 01
 			{
 				{ VUHDO_SPELL_ID_BUFF_FLAMETONGUE_TOTEM, VUHDO_BUFF_TARGET_TOTEM },
@@ -243,9 +242,9 @@ VUHDO_CLASS_BUFFS = {
 --				{ VUHDO_SPELL_ID_BUFF_EARTHLIVING_WEAPON,  VUHDO_BUFF_TARGET_ENCHANT },
 --			},
 --		},
-	-- },
+	},
 
-	-- ["PALADIN"] = {
+	["PALADIN"] = {
 		[VUHDO_I18N_BUFFC_BLESSING] = {
 			{
 				{ VUHDO_SPELL_ID_BUFF_BLESSING_OF_MIGHT, VUHDO_BUFF_TARGET_SINGLE },
@@ -331,9 +330,10 @@ VUHDO_CLASS_BUFFS = {
 				{ VUHDO_SPELL_ID_SACRED_SHIELD, VUHDO_BUFF_TARGET_UNIQUE },
 			},
 		},
-	-- },
+	},
 
 
+	["DRUID"] = {
 		[VUHDO_SPELL_ID_BUFFC_GIFT_OF_THE_WILD] = {
 			{
 				{ VUHDO_SPELL_ID_BUFF_MARK_OF_THE_WILD, VUHDO_BUFF_TARGET_SINGLE },
@@ -345,9 +345,9 @@ VUHDO_CLASS_BUFFS = {
 				{ VUHDO_SPELL_ID_BUFF_THORNS, VUHDO_BUFF_TARGET_SINGLE },
 			},
 		},
-	-- },
+	},
 
-	-- ["WARLOCK"] = {
+	["WARLOCK"] = {
 		[VUHDO_I18N_BUFFC_SKIN] = {
 			{
 				{ VUHDO_SPELL_ID_BUFF_DEMON_SKIN, VUHDO_BUFF_TARGET_SELF },
@@ -364,9 +364,9 @@ VUHDO_CLASS_BUFFS = {
 				{ VUHDO_SPELL_ID_BUFF_DETECT_INVISIBILITY, VUHDO_BUFF_TARGET_SINGLE },
 			},
 		},
-	-- },
+	},
 
-	-- ["MAGE"] = {
+	["MAGE"] = {
 		[VUHDO_SPELL_ID_BUFFC_ARCANE_BRILLIANCE] = { -- 1
 			{
 				{ VUHDO_SPELL_ID_BUFF_ARCANE_INTELLECT, VUHDO_BUFF_TARGET_SINGLE, VUHDO_SPELL_ID_BUFF_DALARAN_INTELLECT },
@@ -417,10 +417,10 @@ VUHDO_CLASS_BUFFS = {
 				{ VUHDO_SPELL_ID_BUFF_SLOW_FALL, VUHDO_BUFF_TARGET_SINGLE },
 			},
 		},
-	-- },
+	},
 
 	-- Death Knight
-	-- ["DEATHKNIGHT"] = {
+	["DEATHKNIGHT"] = {
 		[VUHDO_SPELL_ID_BUFFC_HORN_OF_WINTER] = {
 			{
 				{VUHDO_SPELL_ID_BUFF_HORN_OF_WINTER , VUHDO_BUFF_TARGET_SELF },
@@ -442,10 +442,10 @@ VUHDO_CLASS_BUFFS = {
 				{ VUHDO_SPELL_ID_BUFF_UNHOLY_PRESENCE, VUHDO_BUFF_TARGET_SELF },
 			},
 		},
-	-- },
+	},
 
 	-- Warrior
-	-- ["WARRIOR"] = {
+	["WARRIOR"] = {
 		[VUHDO_I18N_BUFFC_SHOUT] = {
 			{
 				{ VUHDO_SPELL_ID_BUFF_BATTLE_SHOUT, VUHDO_BUFF_TARGET_SELF },
@@ -459,10 +459,10 @@ VUHDO_CLASS_BUFFS = {
 				{ VUHDO_SPELL_ID_BUFF_VIGILANCE, VUHDO_BUFF_TARGET_UNIQUE },
 			},
 		},
-	-- },
+	},
 
 	-- Hunter
-	-- ["HUNTER"] = {
+	["HUNTER"] = {
 		[VUHDO_SPELL_ID_BUFFC_TRUESHOT_AURA] = {
 			{
 				{ VUHDO_SPELL_ID_BUFF_TRUESHOT_AURA, VUHDO_BUFF_TARGET_SELF },
@@ -496,6 +496,42 @@ VUHDO_CLASS_BUFFS = {
 
 
 
+-- Drop buffs whose spell this client doesn't know (GetSpellInfo returned nil),
+-- so a missing spell can't turn into a nil table index later on
+for _, tClassBuffs in pairs(VUHDO_CLASS_BUFFS) do
+	for tCategSpec, tCategBuffs in pairs(tClassBuffs) do
+		for tGroupIndex = #tCategBuffs, 1, -1 do
+			local tGroup = tCategBuffs[tGroupIndex];
+			for tVariantIndex = #tGroup, 1, -1 do
+				if (tGroup[tVariantIndex][1] == nil) then
+					tremove(tGroup, tVariantIndex);
+				end
+			end
+			if (#tGroup == 0) then
+				tremove(tCategBuffs, tGroupIndex);
+			end
+		end
+		if (#tCategBuffs == 0) then
+			tClassBuffs[tCategSpec] = nil;
+		end
+	end
+end
+
+
+
+-- Free-pick Heroes (the "hero" class model of the CoA core) can learn every class's buffs
+do
+	local tHeroBuffs = { };
+	for tClass, tClassBuffs in pairs(VUHDO_CLASS_BUFFS) do
+		for tCategSpec, tCategBuffs in pairs(tClassBuffs) do
+			tHeroBuffs[tCategSpec] = tCategBuffs;
+		end
+	end
+	VUHDO_CLASS_BUFFS["HERO"] = tHeroBuffs;
+end
+
+
+
 VUHDO_CAST_ICON_DIFF = {
 	[VUHDO_SPELL_ID_BUFF_EARTHLIVING_WEAPON] = "Interface\\Icons\\Spell_Shaman_GiftEarthmother",
 	--[VUHDO_SPELL_ID_ANCESTRAL_HEALING] = "Interface\\Icons\\Spell_Shaman_GiftEarthmother",
@@ -519,4 +555,5 @@ VUHDO_BUFF_FILTER_COMBO_TABLE = {
 	{ VUHDO_ID_MELEE_DAMAGE, VUHDO_HEADER_TEXTS[VUHDO_ID_MELEE_DAMAGE] },
 	{ VUHDO_ID_RANGED_DAMAGE, VUHDO_HEADER_TEXTS[VUHDO_ID_RANGED_DAMAGE] },
 	{ VUHDO_ID_RANGED_HEAL, VUHDO_HEADER_TEXTS[VUHDO_ID_RANGED_HEAL] },
+	{ VUHDO_ID_SUPPORT, VUHDO_HEADER_TEXTS[VUHDO_ID_SUPPORT] },
 };

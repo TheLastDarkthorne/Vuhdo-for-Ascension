@@ -433,6 +433,12 @@ function VUHDO_buildAllBuffSetupGenerericPanel()
 	VUHDO_BUFF_PANEL_WIDTH = 0;
 	VUHDO_BUFF_PANEL_HEIGHT = 0;
 
+	-- Categories can come and go (custom buffs), so start from a clean panel
+	for _, tChild in ipairs({ VuhDoNewOptionsBuffsGeneric:GetChildren() }) do
+		tChild:Hide();
+	end
+	VuhDoNewOptionsBuffsGeneric:SetScale(1);
+
 	if (tAllBuffs == nil) then
 		return;
 	end
@@ -520,7 +526,7 @@ function VUHDO_buffUpButtonClicked(aButton)
 	local tPreIndex = nil;
 
 	for tCategSpec, tNumber in pairs(VUHDO_BUFF_ORDER) do
-		if (strfind(tCategSpec, tCategName, 1, true)) then
+		if (strsub(tCategSpec, 3) == tCategName) then
 			tIndex = tCategSpec;
 			break;
 		end
@@ -556,7 +562,7 @@ function VUHDO_buffDownButtonClicked(aButton)
 	local tPreIndex = nil;
 
 	for tCategSpec, tNumber in pairs(VUHDO_BUFF_ORDER) do
-		if (strfind(tCategSpec, tCategName, 1, true)) then
+		if (strsub(tCategSpec, 3) == tCategName) then
 			tIndex = tCategSpec;
 			break;
 		end

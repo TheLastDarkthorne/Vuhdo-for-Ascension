@@ -650,7 +650,7 @@ VUHDO_I18N_TT_466 = "Scans all units no matter how far away";
 VUHDO_I18N_TT_467 = "Only scans units which are in the same map with you.";
 VUHDO_I18N_TT_468 = "Only scans units in a range of max. 100 yards.";
 VUHDO_I18N_TT_469 = "Only scans units in a range of max. 40 yards.";
-VUHDO_I18N_TT_470 = "Scans talent trees for raid role estimation. May conflict with other addons.";
+VUHDO_I18N_TT_470 = "Scans talent trees for raid role estimation, and inspects Conquest of Azeroth classes for their spec. May conflict with other addons.";
 VUHDO_I18N_TT_471 = "Makes bars grow from right to left.";
 VUHDO_I18N_TT_472 = "Indicates units taking severe damage by flashing the health bars.";
 VUHDO_I18N_TT_473 = "Enable this to show HoT squares using the original icon.";
@@ -1117,3 +1117,30 @@ VUHDO_I18N_THIS_TOONS = "This Toon's";
 VUHDO_I18N_SELECTED = "Selected";
 VUHDO_I18N_ALL = "All";
 VUHDO_I18N_REPLACE = "Replace";
+
+-- Role sorting
+VUHDO_I18N_ROLE_SORT = "Role";
+VUHDO_I18N_TT_521 = "Sorts players by role: tanks, healers, supports, then melee and ranged damage dealers.";
+
+-- Absorbs
+VUHDO_I18N_SHOW_ABSORB = "Absorbs";
+VUHDO_I18N_ABSORB_COLOR = "Absorb";
+VUHDO_I18N_TT_ABSORB = "Shows shields (absorbs) on the health bar. Needs a client that reports absorb amounts, such as the Conquest of Azeroth client.";
+VUHDO_I18N_TT_ABSORB_COLOR = "Color of the absorb bar. A bouquet set for the Absorb Bar indicator overrides it.";
+
+-- Custom buffs
+VUHDO_I18N_CUSTOM_BUFFS_TAB = "Custom";
+VUHDO_I18N_TT_CUSTOM_BUFFS_TAB = "Add your own buffs to track, by spell name or spell ID.";
+VUHDO_I18N_CUSTOM_BUFF_ADD_TITLE = "Track a buff";
+VUHDO_I18N_CUSTOM_BUFF_SPELL = "Spell name or ID";
+VUHDO_I18N_TT_CUSTOM_BUFF_SPELL = "Type a spell name or spell ID, or drag the spell here from your spellbook. Press Enter to add it.";
+VUHDO_I18N_CUSTOM_BUFF_TARGET = "Watch it on";
+VUHDO_I18N_TT_CUSTOM_BUFF_TARGET = "Yourself: only you. Group members: everyone in your party or raid; under Config you can narrow it to your own group, tanks, healers and so on. One player: a single player you name under Config, such as your tank.";
+VUHDO_I18N_CUSTOM_BUFF_HINT = "Only spells in your spellbook can be tracked. Pick a listed buff below to change who it is watched on, then press Add again.";
+VUHDO_I18N_CUSTOM_BUFF_ADD = "Add";
+VUHDO_I18N_CUSTOM_BUFF_LIST_TITLE = "Your custom buffs";
+VUHDO_I18N_CUSTOM_BUFF_INFO = "Added buffs appear under Config, where you turn each one on or off and choose which group members to check.";
+VUHDO_I18N_CUSTOM_BUFF_TARGET_SELF = "Yourself";
+VUHDO_I18N_CUSTOM_BUFF_TARGET_SINGLE = "Group members";
+VUHDO_I18N_CUSTOM_BUFF_TARGET_UNIQUE = "One player";
+VUHDO_I18N_CUSTOM_BUFF_REMOVED = "Stopped tracking %s.";
