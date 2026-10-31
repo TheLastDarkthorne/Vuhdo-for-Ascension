@@ -451,6 +451,9 @@ function VUHDO_registerAllBouquets()
 	VUHDO_registerForBouquet(VUHDO_INDICATOR_CONFIG["BOUQUETS"]["BACKGROUND_BAR"], "Background Bar", VUHDO_backgroundBarBouquetCallback);
 	-- Health Bar
 	VUHDO_registerForBouquet(VUHDO_INDICATOR_CONFIG["BOUQUETS"]["HEALTH_BAR"], "Health Bar", VUHDO_healthBarBouquetCallback);
+	-- Absorb Bar
+	VUHDO_resetAbsorbBouquetColors();
+	VUHDO_registerForBouquet(VUHDO_INDICATOR_CONFIG["BOUQUETS"]["ABSORB_BAR"], "Absorb Bar", VUHDO_absorbBarBouquetCallback);
 	-- Per panel Health Bars
 	twipe(tAlreadyRegistered);
 	for tCnt = 1, VUHDO_MAX_PANELS do

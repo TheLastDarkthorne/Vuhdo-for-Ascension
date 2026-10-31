@@ -7,6 +7,7 @@ local function VUHDO_hideAllPanels()
 	VuhDoNewOptionsBuffsAppearance:Hide();
 	VuhDoNewOptionsBuffsColors:Hide();
 	VuhDoNewOptionsBuffsRebuff:Hide();
+	VuhDoNewOptionsBuffsCustom:Hide();
 end
 
 
@@ -39,4 +40,12 @@ end
 function VUHDO_newOptionsBuffsRebuffClicked()
 	VUHDO_hideAllPanels();
 	VuhDoNewOptionsBuffsRebuff:Show();
+end
+
+
+
+--
+function VUHDO_newOptionsBuffsCustomClicked()
+	VUHDO_hideAllPanels();
+	VuhDoNewOptionsBuffsCustom:Show();
 end

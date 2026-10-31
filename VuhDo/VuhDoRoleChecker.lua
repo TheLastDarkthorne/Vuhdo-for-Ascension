@@ -57,6 +57,7 @@ function VUHDO_resetTalentScan(aUnit)
 	if (aUnit == nil) then
 		twipe(VUHDO_INSPECTED_ROLES);
 		twipe(VUHDO_FIX_ROLES);
+		VUHDO_coaResetSpecs();
 	else
 		if (VUHDO_PLAYER_RAID_ID == aUnit) then
 			aUnit = "player";
@@ -114,6 +115,10 @@ local function VUHDO_shouldBeInspected(aUnit)
 		or 24 == tClass -- VUHDO_ID_MAGES
 		or 25 == tClass -- VUHDO_ID_WARLOCKS
 		or 29 == tClass) then -- VUHDO_ID_DEATH_KNIGHT
+		return false;
+	end
+	-- CoA custom classes have no stock talent trees, CoA_RoleDeterminator inspects them
+	if (VUHDO_isCoaCustomClassUnit(aUnit)) then
 		return false;
 	end
   -- Already inspected or manually overridden?
@@ -306,12 +311,8 @@ function VUHDO_determineRole(aUnit)
 -- 	end
 
 	tName = tInfo["name"];
-	-- Manual role override oder dungeon finder role?
-	if aUnit == VUHDO_PLAYER_RAID_ID then 
-		tFixRole = VUHDO_MANUAL_ROLES[tName] or VUHDO_determineDfToolRole(tInfo) or CoA_Determine_Role(tInfo)
-	else
-	 	tFixRole = VUHDO_MANUAL_ROLES[tName] or VUHDO_determineDfToolRole(tInfo)
-	end
+	-- Manual role override, CoA spec or dungeon finder role?
+	tFixRole = VUHDO_MANUAL_ROLES[tName] or CoA_Determine_Role(tInfo) or VUHDO_determineDfToolRole(tInfo);
 	if (tFixRole ~= nil) then
 		return tFixRole;
 	end

@@ -18,6 +18,63 @@ VUHDO_I18N_PRIESTS = "Priests";
 VUHDO_I18N_DEATH_KNIGHT = "Death Knights";
 VUHDO_I18N_HERO = "Hero";
 
+-- Conquest of Azeroth classes. These are fallbacks: the client's own class
+-- names replace them below, since several classes were renamed over time.
+VUHDO_I18N_PROPHET = "Venomancer";
+VUHDO_I18N_FLESHWARDEN = "Knight of Xoroth";
+VUHDO_I18N_RANGER = "Ranger";
+VUHDO_I18N_PYROMANCER = "Pyromancer";
+VUHDO_I18N_WITCHHUNTER = "Witch Hunter";
+VUHDO_I18N_STARCALLER = "Starcaller";
+VUHDO_I18N_SPIRITMAGE = "Runemaster";
+VUHDO_I18N_CULTIST = "Cultist";
+VUHDO_I18N_TINKER = "Tinker";
+VUHDO_I18N_SUNCLERIC = "Sun Cleric";
+VUHDO_I18N_NECROMANCER = "Necromancer";
+VUHDO_I18N_WILDWALKER = "Primalist";
+VUHDO_I18N_CHRONOMANCER = "Chronomancer";
+VUHDO_I18N_STORMBRINGER = "Stormbringer";
+VUHDO_I18N_SONOFARUGAL = "Bloodmage";
+VUHDO_I18N_REAPER = "Reaper";
+VUHDO_I18N_GUARDIAN = "Guardian";
+VUHDO_I18N_MONKS = "Templar";
+VUHDO_I18N_BARBARIAN = "Barbarian";
+VUHDO_I18N_WITCHDOCTOR = "Witch Doctor";
+VUHDO_I18N_DEMONHUNTER = "Felsworn";
+
+if (LOCALIZED_CLASS_NAMES_MALE ~= nil) then
+	for tToken, tGlobalName in pairs({
+		["PROPHET"] = "VUHDO_I18N_PROPHET", ["FLESHWARDEN"] = "VUHDO_I18N_FLESHWARDEN",
+		["RANGER"] = "VUHDO_I18N_RANGER", ["PYROMANCER"] = "VUHDO_I18N_PYROMANCER",
+		["WITCHHUNTER"] = "VUHDO_I18N_WITCHHUNTER", ["STARCALLER"] = "VUHDO_I18N_STARCALLER",
+		["SPIRITMAGE"] = "VUHDO_I18N_SPIRITMAGE", ["CULTIST"] = "VUHDO_I18N_CULTIST",
+		["TINKER"] = "VUHDO_I18N_TINKER", ["SUNCLERIC"] = "VUHDO_I18N_SUNCLERIC",
+		["NECROMANCER"] = "VUHDO_I18N_NECROMANCER", ["WILDWALKER"] = "VUHDO_I18N_WILDWALKER",
+		["CHRONOMANCER"] = "VUHDO_I18N_CHRONOMANCER", ["STORMBRINGER"] = "VUHDO_I18N_STORMBRINGER",
+		["SONOFARUGAL"] = "VUHDO_I18N_SONOFARUGAL", ["REAPER"] = "VUHDO_I18N_REAPER",
+		["GUARDIAN"] = "VUHDO_I18N_GUARDIAN", ["MONK"] = "VUHDO_I18N_MONKS",
+		["BARBARIAN"] = "VUHDO_I18N_BARBARIAN", ["WITCHDOCTOR"] = "VUHDO_I18N_WITCHDOCTOR",
+		["DEMONHUNTER"] = "VUHDO_I18N_DEMONHUNTER",
+	}) do
+		if (LOCALIZED_CLASS_NAMES_MALE[tToken] ~= nil) then
+			_G[tGlobalName] = LOCALIZED_CLASS_NAMES_MALE[tToken];
+		end
+	end
+end
+
+-- Class color tooltips (Options > Colors > Classes)
+VUHDO_I18N_TT_499 = VUHDO_I18N_HERO .. " class color";
+for tIndex, tClassName in ipairs({
+	VUHDO_I18N_PROPHET, VUHDO_I18N_FLESHWARDEN, VUHDO_I18N_RANGER, VUHDO_I18N_PYROMANCER,
+	VUHDO_I18N_WITCHHUNTER, VUHDO_I18N_STARCALLER, VUHDO_I18N_SPIRITMAGE, VUHDO_I18N_CULTIST,
+	VUHDO_I18N_TINKER, VUHDO_I18N_SUNCLERIC, VUHDO_I18N_NECROMANCER, VUHDO_I18N_WILDWALKER,
+	VUHDO_I18N_CHRONOMANCER, VUHDO_I18N_STORMBRINGER, VUHDO_I18N_SONOFARUGAL, VUHDO_I18N_REAPER,
+	VUHDO_I18N_GUARDIAN, VUHDO_I18N_MONKS, VUHDO_I18N_BARBARIAN, VUHDO_I18N_WITCHDOCTOR,
+	VUHDO_I18N_DEMONHUNTER,
+}) do
+	_G["VUHDO_I18N_TT_" .. (499 + tIndex)] = tClassName .. " class color";
+end
+
 
 -- Group Model Names
 -- @EXACT = false
@@ -221,6 +278,7 @@ VUHDO_I18N_MELEE_TANK = "Melee-Tank";
 VUHDO_I18N_MELEE_DPS = "Melee-DPS";
 VUHDO_I18N_RANGED_DPS = "Ranged-DPS";
 VUHDO_I18N_RANGED_HEALERS = "Ranged-Healer";
+VUHDO_I18N_SUPPORTS = "Support";
 VUHDO_I18N_AUTO_DETECT = "<auto detect>";
 VUHDO_I18N_PROMOTE_ASSIST_MSG_1 = "Promoted |cffffe566";
 VUHDO_I18N_PROMOTE_ASSIST_MSG_2 = "|r to assistant.";
@@ -405,3 +463,14 @@ VUHDO_I18N_LOAD_PROFILE = "Load Profile";
 VUHDO_I18N_DC_SHIELD_NO_MACROS = "No free macro slots for this toon... d/c shield temporarily disabled.";
 VUHDO_I18N_BROKER_TOOLTIP_1 = "|cffffff00Left Click|r to show options menu";
 VUHDO_I18N_BROKER_TOOLTIP_2 = "|cffffff00Right Click|r to show popup menu";
+
+-- Absorbs
+VUHDO_I18N_ABSORB_BAR = "Absorb Bar";
+
+-- Custom buffs
+VUHDO_I18N_CUSTOM_BUFF_EMPTY = "Type a spell name or spell ID first.";
+VUHDO_I18N_CUSTOM_BUFF_NO_SPELL_ID = "There is no spell with ID %d.";
+VUHDO_I18N_CUSTOM_BUFF_BUILT_IN = "%s is already in your class buff list under Config.";
+VUHDO_I18N_CUSTOM_BUFF_ADDED = "Now tracking %s.";
+VUHDO_I18N_CUSTOM_BUFF_UPDATED = "Updated %s.";
+VUHDO_I18N_CUSTOM_BUFF_NOT_KNOWN = "%s isn't in your spellbook, so it stays inactive until you learn it.";

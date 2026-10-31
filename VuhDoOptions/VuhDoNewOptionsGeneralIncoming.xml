@@ -3,7 +3,7 @@
     <Frames>
       <Frame name="$parentIncomingPanel" inherits="VuhDoPanelTemplate">
         <Size>
-          <AbsDimension x="244" y="112" />
+          <AbsDimension x="244" y="150" />
         </Size>
         <Anchors>
           <Anchor point="TOPLEFT">
@@ -77,6 +77,39 @@
 			      	</OnLoad>
       			</Scripts>
           </CheckButton>
+
+          <CheckButton name="$parentAbsorbCheckButton" text="VUHDO_I18N_SHOW_ABSORB" inherits="VuhDoCheckButtonTemplate">
+            <Anchors>
+              <Anchor point="TOPLEFT">
+                <Offset>
+                  <AbsDimension x="13" y="-107" />
+                </Offset>
+              </Anchor>
+            </Anchors>
+			      <Scripts>
+			      	<OnLoad>
+			      		VUHDO_lnfSetModel(self, "VUHDO_CONFIG.SHOW_ABSORB");
+			      		VUHDO_lnfSetTooltip(self, VUHDO_I18N_TT_ABSORB);
+			      	</OnLoad>
+      			</Scripts>
+          </CheckButton>
+
+          <Frame name="$parentAbsorbTexture" inherits="VuhDoContextColorSwatchTexture">
+            <Anchors>
+              <Anchor point="TOPLEFT">
+                <Offset>
+                  <AbsDimension x="133" y="-107" />
+                </Offset>
+              </Anchor>
+            </Anchors>
+			      <Scripts>
+			      	<OnLoad>
+			      		VUHDO_lnfSetModel(self, "VUHDO_PANEL_SETUP.BAR_COLORS.ABSORB");
+			      		VUHDO_lnfInitColorSwatch(self, VUHDO_I18N_ABSORB_COLOR, VUHDO_I18N_ABSORB_COLOR);
+			      		VUHDO_lnfSetTooltip(self, VUHDO_I18N_TT_ABSORB_COLOR);
+			      	</OnLoad>
+      			</Scripts>
+          </Frame>
 
           <Frame name="$parentTitleLabel" inherits="VuhDoLabelFrameTemplate">
             <Size>
@@ -378,9 +411,9 @@
           </Frame>
         </Frames>
       </Frame>
-	    <Scripts>
-    	  <OnHide>VUHDO_setLhcEnabled()</OnHide>
-    	</Scripts>
     </Frames>
+    <Scripts>
+      <OnHide>VUHDO_setLhcEnabled()</OnHide>
+    </Scripts>
   </Frame>
 </Ui>

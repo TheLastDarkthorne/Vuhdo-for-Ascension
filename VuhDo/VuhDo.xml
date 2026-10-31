@@ -21,6 +21,7 @@
   <Script file="VuhDoGuiConst.lua" />
   <Script file="VuhDoToolbox.lua" />
   <Script file="VuhDoBuffConst.lua" />
+  <Script file="VuhDoCustomBuffs.lua" />
   <Script file="VuhDoDebuffConst.lua" />
   <Script file="VuhDoDefaultsBouquets.lua" />
   <Script file="VuhDoDefaults.lua" />

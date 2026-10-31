@@ -573,6 +573,14 @@ local function VUHDO_fastCacheInitButton(aPanelNum, aButtonNum)
 	-- Tot Mana
 	VUHDO_HEALTH_BAR[tButton][16] = VUHDO_GLOBAL[tButtonName .. "TotBgBarHlBarMaBar"];
 	VUHDO_HEALTH_BAR[tTotButton][2] = VUHDO_GLOBAL[tButtonName .. "TotBgBarHlBarMaBar"];
+	-- Absorb
+	VUHDO_HEALTH_BAR[tButton][17] = VUHDO_GLOBAL[tButtonName .. "BgBarIcBarAbBar"];
+	VUHDO_HEALTH_BAR[tTargetButton][17] = VuhDoDummyStatusBar;
+	VUHDO_HEALTH_BAR[tTotButton][17] = VuhDoDummyStatusBar;
+	-- Overshield
+	VUHDO_HEALTH_BAR[tButton][18] = VUHDO_GLOBAL[tButtonName .. "BgBarIcBarOsBar"];
+	VUHDO_HEALTH_BAR[tTargetButton][18] = VuhDoDummyStatusBar;
+	VUHDO_HEALTH_BAR[tTotButton][18] = VuhDoDummyStatusBar;
 
 	VUHDO_HEAL_BUTTON[aPanelNum][aButtonNum] = tButton;
 	VUHDO_BUTTON_CACHE[tButton] = aPanelNum;

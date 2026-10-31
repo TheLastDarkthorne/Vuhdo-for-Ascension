@@ -247,6 +247,14 @@ function VUHDO_positionHealButton(aButton)
 	tIncBar:SetWidth(sBarScaling["barWidth"]);
 	tIncBar:SetHeight(sBarHeight);
 
+	-- Absorb and overshield bars cover the same area as the incoming bar
+	for tCnt = 17, 18 do
+		tIncBar = VUHDO_getHealthBar(aButton, tCnt);
+		tIncBar:SetPoint("TOPLEFT", VUHDO_getHealthBar(aButton, 3):GetName(), "TOPLEFT", 0, 0);
+		tIncBar:SetWidth(sBarScaling["barWidth"]);
+		tIncBar:SetHeight(sBarHeight);
+	end
+
 	-- Player Target
 	VUHDO_initPlayerTargetBorder(aButton, VUHDO_getPlayerTargetFrame(aButton));
 	VUHDO_initPlayerTargetBorder(VUHDO_getTargetButton(aButton), VUHDO_getPlayerTargetFrameTarget(aButton));
@@ -374,6 +382,26 @@ end
 --
 local function VUHDO_initIncomingBar()
 	VUHDO_getHealthBar(sButton, 6):SetValueRange(0, 0);
+end
+
+
+
+--
+local tAbsorbBar;
+local tOvershieldBar;
+local function VUHDO_initAbsorbBar()
+	tAbsorbBar = VUHDO_getHealthBar(sButton, 17);
+	tOvershieldBar = VUHDO_getHealthBar(sButton, 18);
+
+	VUHDO_setLlcStatusBarTexture(tAbsorbBar, VUHDO_INDICATOR_CONFIG["CUSTOM"]["ABSORB_BAR"]["TEXTURE"]);
+	tOvershieldBar:SetStatusBarTexture("Interface\\Buttons\\WHITE8X8");
+
+	-- Keep absorbs underneath the health texture, the overshield marker on top of it
+	tAbsorbBar:SetFrameLevel(VUHDO_getHealthBar(sButton, 6):GetFrameLevel());
+	tOvershieldBar:SetFrameLevel(VUHDO_getHealthBar(sButton, 1):GetFrameLevel());
+
+	tAbsorbBar:SetValueRange(0, 0);
+	tOvershieldBar:SetValueRange(0, 0);
 end
 
 
@@ -1049,6 +1077,8 @@ function VUHDO_initHealButton(aButton, aPanelNum)
 	VUHDO_getHealthBar(aButton, 6):SetIsInverted(tIsInverted);
 	VUHDO_getHealthBar(aButton, 8):SetIsInverted(tIsInverted);
 	VUHDO_getHealthBar(aButton, 14):SetIsInverted(tIsInverted);
+	VUHDO_getHealthBar(aButton, 17):SetIsInverted(tIsInverted);
+	VUHDO_getHealthBar(aButton, 18):SetIsInverted(tIsInverted);
 
 	tIsInverted = VUHDO_INDICATOR_CONFIG["CUSTOM"]["MANA_BAR"]["invertGrowth"];
 	VUHDO_getHealthBar(aButton, 2):SetIsInverted(tIsInverted);
@@ -1079,6 +1109,8 @@ function VUHDO_initHealButton(aButton, aPanelNum)
 	VUHDO_getHealthBar(aButton, 6):SetOrientation(tOrientation);
 	VUHDO_getHealthBar(aButton, 8):SetOrientation(tOrientation);
 	VUHDO_getHealthBar(aButton, 14):SetOrientation(tOrientation);
+	VUHDO_getHealthBar(aButton, 17):SetOrientation(tOrientation);
+	VUHDO_getHealthBar(aButton, 18):SetOrientation(tOrientation);
 
 	-- Orient Mana
 	tIsTurned = VUHDO_INDICATOR_CONFIG["CUSTOM"]["MANA_BAR"]["turnAxis"];
@@ -1107,6 +1139,7 @@ function VUHDO_initHealButton(aButton, aPanelNum)
 	VUHDO_initTargetBar();
 	VUHDO_initTotBar();
 	VUHDO_initIncomingBar();
+	VUHDO_initAbsorbBar();
 	VUHDO_initThreatBar();
 	VUHDO_initBarTexts(aButton, sHealthBar, sBarScaling["barWidth"]);
 	VUHDO_initOverhealText(sHealthBar, sBarScaling["barWidth"]);

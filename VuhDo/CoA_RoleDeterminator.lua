@@ -1,208 +1,467 @@
---- COA W.I.P. ---
+-- Conquest of Azeroth: roles of the custom classes, read from the client's spec data.
+-- A spec marked Tank or Healer keeps that role; a spec marked Support goes to Support
+-- before damage. Stock classes and Hero are left to VuhDo's usual role checks.
+-- Specs come from the player's own client, from other VuhDo users (addon messages)
+-- and from inspecting group members. Everything is skipped on clients without the
+-- CoA spec API, such as a stock 3.3.5a client.
 
--- TODO: ADAPT FUNCTIONS TO DRAGONFLIGHT TREES
+local VUHDO_COA_PREFIX = "VD_COA";
+local VUHDO_COA_INSPECT_INTERVAL = 2;
+local VUHDO_COA_INSPECT_TIMEOUT = 5;
+local VUHDO_COA_INSPECT_REFRESH = 300;
+local VUHDO_COA_INSPECT_RETRY = 30;
+local VUHDO_COA_BROADCAST_DELAY = 3;
 
-local COA_ROLE_BY_SPEC = {}
-local COA_ROLE_BY_CLASS = {}
+local VUHDO_COA_REPORTED_SPECS = { }; -- name -> spec ID, sent by that player's VuhDo
+local VUHDO_COA_INSPECTED_SPECS = { }; -- name -> spec ID, from an inspect or a passive aura
+local VUHDO_COA_INSPECT_TIMES = { }; -- name -> time of the last inspect attempt
+local VUHDO_COA_SPECS_BY_CLASS = { };
 
--- PURE ROLE CLASSES
-COA_ROLE_BY_CLASS[VUHDO_ID_NECROMANCER] =	VUHDO_ID_MELEE_DAMAGE
-COA_ROLE_BY_CLASS[VUHDO_ID_RANGER] =		VUHDO_ID_MELEE_DAMAGE
-COA_ROLE_BY_CLASS[VUHDO_ID_STORMBRINGER] =	VUHDO_ID_MELEE_DAMAGE
-COA_ROLE_BY_CLASS[VUHDO_ID_PYROMANCER] =	VUHDO_ID_MELEE_DAMAGE
-COA_ROLE_BY_CLASS[VUHDO_ID_BARBARIAN] =		VUHDO_ID_MELEE_DAMAGE
+local sPending = nil; -- { name, guid, unit, time } of our open inspect request
+local sBroadcastAt = nil;
+local sKnownNames = { };
 
--- HYBRID CLASSES
-COA_ROLE_BY_CLASS[VUHDO_ID_WITCHHUNTER] =	VUHDO_ID_TYPE_SPECIAL -- DONE
-COA_ROLE_BY_CLASS[VUHDO_ID_STARCALLER] =	VUHDO_ID_TYPE_SPECIAL -- DONE
-COA_ROLE_BY_CLASS[VUHDO_ID_SPIRITMAGE] =	VUHDO_ID_TYPE_SPECIAL -- DONE
-COA_ROLE_BY_CLASS[VUHDO_ID_CULTIST] =		VUHDO_ID_TYPE_SPECIAL
-COA_ROLE_BY_CLASS[VUHDO_ID_TINKER] =		VUHDO_ID_TYPE_SPECIAL -- DONE
-COA_ROLE_BY_CLASS[VUHDO_ID_SUNCLERIC] =		VUHDO_ID_TYPE_SPECIAL
-COA_ROLE_BY_CLASS[VUHDO_ID_WILDWALKER] =	VUHDO_ID_TYPE_SPECIAL -- DONE
-COA_ROLE_BY_CLASS[VUHDO_ID_CHRONOMANCER] =	VUHDO_ID_TYPE_SPECIAL
-COA_ROLE_BY_CLASS[VUHDO_ID_PROPHET] =		VUHDO_ID_TYPE_SPECIAL -- DONE
-COA_ROLE_BY_CLASS[VUHDO_ID_FLESHWARDEN] =	VUHDO_ID_TYPE_SPECIAL
-COA_ROLE_BY_CLASS[VUHDO_ID_SONOFARUGAL] =	VUHDO_ID_TYPE_SPECIAL -- DONE
-COA_ROLE_BY_CLASS[VUHDO_ID_REAPER] =		VUHDO_ID_TYPE_SPECIAL -- DONE
-COA_ROLE_BY_CLASS[VUHDO_ID_GUARDIAN] =		VUHDO_ID_TYPE_SPECIAL
-COA_ROLE_BY_CLASS[VUHDO_ID_MONK] =			VUHDO_ID_TYPE_SPECIAL -- DONE
-COA_ROLE_BY_CLASS[VUHDO_ID_WITCHDOCTOR] =	VUHDO_ID_TYPE_SPECIAL
-COA_ROLE_BY_CLASS[VUHDO_ID_DEMONHUNTER] =	VUHDO_ID_TYPE_SPECIAL
-
--- PRIMALIST
-COA_ROLE_BY_SPEC["GEOMANCY"] = VUHDO_ID_TYPE_SPECIAL -- HYBRID BY TALENTS
-COA_ROLE_BY_SPEC["PRIMAL"] = VUHDO_ID_MELEE_DAMAGE
-COA_ROLE_BY_SPEC["LIFE"] = VUHDO_ID_RANGED_HEAL
-
--- SON OF ARUGAL
-COA_ROLE_BY_SPEC["PACKLEADER"] = VUHDO_ID_MELEE_TANK
-COA_ROLE_BY_SPEC["BLOOD"] = VUHDO_ID_TYPE_SPECIAL	-- HYBRID BY TALENTS
-COA_ROLE_BY_SPEC["FEROCITY"] = VUHDO_ID_MELEE_DAMAGE
-
--- STARCALLER
-COA_ROLE_BY_SPEC["ASTRALWARFARE"] = VUHDO_ID_TYPE_SPECIAL -- HYBRID BY TALENTS
-COA_ROLE_BY_SPEC["TIDES"] = VUHDO_ID_RANGED_HEAL
-COA_ROLE_BY_SPEC["MOONBOW"] = VUHDO_ID_TYPE_SPECIAL -- HYBRID BY TALENTS
-
--- TINKER
-COA_ROLE_BY_SPEC["MECHANICS"] = VUHDO_ID_MELEE_TANK -- or VUHDO_ID_MELEE_DAMAGE
-COA_ROLE_BY_SPEC["INVENTION"] = VUHDO_ID_RANGED_HEAL
-COA_ROLE_BY_SPEC["FIREARMS"] = VUHDO_ID_MELEE_DAMAGE
-
--- VENOMANCER
-
-COA_ROLE_BY_SPEC["FORTITUDE"] = VUHDO_ID_TYPE_SPECIAL -- HYBRID BY TALENT 704264 -- DONE
-COA_ROLE_BY_SPEC["VENOM"] = VUHDO_ID_TYPE_SPECIAL -- HYBRID BY TALENT 804980 -- DONE
-COA_ROLE_BY_SPEC["STALKING"] = VUHDO_ID_MELEE_DAMAGE
-
--- MONK 
-COA_ROLE_BY_SPEC["DISCIPLINE"] = VUHDO_ID_MELEE_TANK
-COA_ROLE_BY_SPEC["FIGHTING"] = VUHDO_ID_MELEE_DAMAGE
-COA_ROLE_BY_SPEC["RUNES"] = VUHDO_ID_MELEE_DAMAGE
--- WITCH HUNTER
-COA_ROLE_BY_SPEC["BOLTSLINGER"] = VUHDO_ID_MELEE_DAMAGE
-COA_ROLE_BY_SPEC["DARKNESS"] = VUHDO_ID_MELEE_DAMAGE
-COA_ROLE_BY_SPEC["INQUISITION"] = VUHDO_ID_MELEE_TANK
-
--- REAPER
-COA_ROLE_BY_SPEC["DOMINATION"] = VUHDO_ID_MELEE_TANK
-COA_ROLE_BY_SPEC["SOUL"] = VUHDO_ID_MELEE_DAMAGE
-COA_ROLE_BY_SPEC["REAPING"] = VUHDO_ID_MELEE_DAMAGE
-
--- SPIRITMAGE (RUNEMASTER)
-COA_ROLE_BY_SPEC["RIFTBLADE"] = VUHDO_ID_TYPE_SPECIAL -- HYBRID BY STANCE
-COA_ROLE_BY_SPEC["ARCANE"] = VUHDO_ID_MELEE_DAMAGE
-COA_ROLE_BY_SPEC["RUNIC"] = VUHDO_ID_MELEE_DAMAGE
-
--- CHRONOMANCER
-COA_ROLE_BY_SPEC["DUALITY"] = VUHDO_ID_RANGED_HEAL
-COA_ROLE_BY_SPEC["TIME"] = VUHDO_ID_MELEE_DAMAGE
-COA_ROLE_BY_SPEC["DISPLACEMENT"] = VUHDO_ID_MELEE_TANK
+local twipe = table.wipe;
+local pcall = pcall;
+local type = type;
+local pairs = pairs;
+local ipairs = ipairs;
+local tonumber = tonumber;
 
 
 
+--
+local function VUHDO_isCoaSpecApi()
+	return type(C_ClassInfo) == "table" and type(C_ClassInfo.GetSpecInfoByID) == "function"
+		and type(C_ClassInfo.GetAllSpecs) == "function" and type(C_ClassInfo.GetSpecInfo) == "function"
+		and type(IsCustomClass) == "function";
+end
 
 
-local function CoA_GetTalentList()
-	local TALENTS_LIST ={}
-	for i=1,#SpellKitAdvanced.BuildSelectMenu.cards do
-		local tab = _G["SpellKitAdvanced.spellTree.tab"..i]
-		for tier,tier_data in pairs(tab.specData.Tiers) do
-			for node, node_data in pairs(tier_data) do
-				if node_data then
-					local CA_ID = node_data.ID
-					local spell_ID = C_CharacterAdvancement.GetEntryByInternalID(CA_ID).Spells
-					local name,_ = GetSpellInfo(spell_ID)
-					TALENTS_LIST[spell_ID] = {}
-					TALENTS_LIST[spell_ID]["name"] = name
-					TALENTS_LIST[spell_ID]["isKnown"] = IsSpellKnown(spell_ID)
+
+--
+local function VUHDO_isCoaInspectApi()
+	return type(C_CharacterAdvancement) == "table"
+		and type(C_CharacterAdvancement.InspectUnit) == "function"
+		and type(C_CharacterAdvancement.GetInspectInfo) == "function"
+		and type(C_CharacterAdvancement.UnitKnownID) == "function";
+end
+
+
+
+-- Custom CoA class (not stock, not Hero)?
+function VUHDO_isCoaCustomClassUnit(aUnit)
+	if (not VUHDO_isCoaSpecApi() or aUnit == nil) then
+		return false;
+	end
+
+	local tIsOk, tIsCustom = pcall(IsCustomClass, aUnit);
+	if (not tIsOk or not tIsCustom) then
+		return false;
+	end
+
+	if (type(IsHeroClass) == "function") then
+		local tIsHeroOk, tIsHero = pcall(IsHeroClass, aUnit);
+		if (tIsHeroOk and tIsHero) then
+			return false;
+		end
+	end
+
+	return true;
+end
+
+
+
+--
+local function VUHDO_getCoaSpecInfo(aSpecId)
+	if (aSpecId == nil or not VUHDO_isCoaSpecApi()) then
+		return nil;
+	end
+
+	local tIsOk, tInfo = pcall(C_ClassInfo.GetSpecInfoByID, aSpecId);
+	if (tIsOk and type(tInfo) == "table") then
+		return tInfo;
+	end
+
+	return nil;
+end
+
+
+
+--
+local function VUHDO_getCoaClassSpecs(aClass)
+	if (aClass == nil) then
+		return { };
+	end
+
+	if (VUHDO_COA_SPECS_BY_CLASS[aClass] == nil) then
+		local tSpecs = { };
+		local tIsOk, tTokens = pcall(C_ClassInfo.GetAllSpecs, aClass);
+		if (tIsOk and type(tTokens) == "table") then
+			for _, tToken in ipairs(tTokens) do
+				local tIsInfoOk, tInfo = pcall(C_ClassInfo.GetSpecInfo, aClass, tToken);
+				if (tIsInfoOk and type(tInfo) == "table" and tInfo["ID"] ~= nil) then
+					tinsert(tSpecs, tInfo);
 				end
 			end
 		end
+		VUHDO_COA_SPECS_BY_CLASS[aClass] = tSpecs;
 	end
-	return TALENTS_LIST
+
+	return VUHDO_COA_SPECS_BY_CLASS[aClass];
 end
 
 
-local function CoA_Determine_Role_By_Talents(anInfo)
-	-- LOGIC FOR PLAYER INSPECTION
-	if anInfo["unit"] == "player" and SpellKitAdvanced.BuildSelectMenu.currentSpec then
 
-		local primarySpec = C_CharacterAdvancement.GetEntryByInternalID(SpellKitAdvanced.BuildSelectMenu.currentSpec).Tab
-		local talents = CoA_GetTalentList()
-		local class = anInfo["classId"]
+-- Tank and Healer keep their role, Support comes before damage
+function VUHDO_getCoaRoleForSpec(aSpecId)
+	local tInfo = VUHDO_getCoaSpecInfo(aSpecId);
+	if (tInfo == nil) then
+		return nil;
+	elseif (tInfo["Tank"]) then
+		return VUHDO_ID_MELEE_TANK;
+	elseif (tInfo["Healer"]) then
+		return VUHDO_ID_RANGED_HEAL;
+	elseif (tInfo["Support"]) then
+		return VUHDO_ID_SUPPORT;
+	elseif (tInfo["MeleeDPS"]) then
+		return VUHDO_ID_MELEE_DAMAGE;
+	elseif (tInfo["RangedDPS"] or tInfo["CasterDPS"]) then
+		return VUHDO_ID_RANGED_DAMAGE;
+	end
 
-		if class == VUHDO_ID_PROPHET then
-			if primarySpec == "FORTITUDE" then
-				if CoA_GetTalentList()[704264]["isKnown"] then
-					VUHDO_DF_TOOL_ROLES[anInfo["name"]] = VUHDO_ID_MELEE_DAMAGE
-					return VUHDO_ID_MELEE_DAMAGE
-				else
-					VUHDO_DF_TOOL_ROLES[anInfo["name"]] = VUHDO_ID_MELEE_TANK
-					return VUHDO_ID_MELEE_TANK
+	return nil;
+end
+
+
+
+--
+local function VUHDO_getOwnCoaSpecId()
+	if (type(C_CharacterAdvancement) == "table" and type(C_CharacterAdvancement.GetActiveChrSpec) == "function") then
+		local tIsOk, tSpecId = pcall(C_CharacterAdvancement.GetActiveChrSpec);
+		if (tIsOk and VUHDO_getCoaSpecInfo(tSpecId) ~= nil) then
+			return tSpecId;
+		end
+	end
+
+	if (type(GetSpecialization) == "function") then
+		local tIsOk, tSpecId = pcall(GetSpecialization);
+		if (tIsOk and tSpecId ~= 0 and VUHDO_getCoaSpecInfo(tSpecId) ~= nil) then
+			return tSpecId;
+		end
+	end
+
+	return nil;
+end
+
+
+
+-- The level 10 passive of each spec, as a buff name, if it shows as an aura
+local function VUHDO_getCoaSpecFromAuras(aUnit, aClass)
+	local tFound = nil;
+	for _, tInfo in ipairs(VUHDO_getCoaClassSpecs(aClass)) do
+		local tPassive = tInfo["PassiveID"];
+		local tName = tPassive ~= nil and GetSpellInfo(tPassive) or nil;
+		if (tName ~= nil and UnitBuff(aUnit, tName) ~= nil) then
+			if (tFound ~= nil) then
+				return nil; -- ambiguous
+			end
+			tFound = tInfo["ID"];
+		end
+	end
+
+	return tFound;
+end
+
+
+
+-- After a successful inspect: which spec's passive does the unit know?
+local function VUHDO_readInspectedCoaSpec(aUnit, aClass)
+	local tIsOk, tActive, tUnlocked = pcall(C_CharacterAdvancement.GetInspectInfo, aUnit);
+	if (not tIsOk) then
+		return nil;
+	end
+
+	-- The client's own code passes either the build index or its unlocked spec ID
+	local tBuilds = { };
+	if (tActive ~= nil) then
+		tinsert(tBuilds, tActive);
+		if (type(tUnlocked) == "table" and tUnlocked[tActive] ~= nil and tUnlocked[tActive] ~= tActive) then
+			tinsert(tBuilds, tUnlocked[tActive]);
+		end
+	end
+
+	local tGetEntry = C_CharacterAdvancement.GetEntryBySpellID;
+	for _, tBuild in ipairs(tBuilds) do
+		local tFound = nil;
+		for _, tInfo in ipairs(VUHDO_getCoaClassSpecs(aClass)) do
+			local tIds = { tInfo["PassiveID"] };
+			if (type(tGetEntry) == "function" and tInfo["PassiveID"] ~= nil) then
+				local tIsEntryOk, tEntry = pcall(tGetEntry, tInfo["PassiveID"]);
+				if (tIsEntryOk and type(tEntry) == "table" and tEntry["ID"] ~= nil) then
+					tinsert(tIds, tEntry["ID"]);
 				end
-			elseif primarySpec == "VENOM" then
-				if CoA_GetTalentList()[804980]["isKnown"] then
-					VUHDO_DF_TOOL_ROLES[anInfo["name"]] = VUHDO_ID_MELEE_DAMAGE
-					return VUHDO_ID_MELEE_DAMAGE
-				else
-					VUHDO_DF_TOOL_ROLES[anInfo["name"]] = VUHDO_ID_RANGED_HEAL
-					return VUHDO_ID_RANGED_HEAL
+			end
+
+			for _, tId in ipairs(tIds) do
+				local tIsKnownOk, tIsKnown = pcall(C_CharacterAdvancement.UnitKnownID, aUnit, tId, tBuild);
+				if (tIsKnownOk and tIsKnown) then
+					if (tFound ~= nil and tFound ~= tInfo["ID"]) then
+						tFound = false; -- more than one spec matched, this reading can't be trusted
+					elseif (tFound == nil) then
+						tFound = tInfo["ID"];
+					end
+					break;
 				end
 			end
 		end
 
-		if class == VUHDO_ID_WILDWALKER then
-			if primarySpec == "GEOMANCY" then
-				-- BODY OF STONE + MOUNTAIN MOVER + EARTHEN AEGIS													
-				if IsSpellKnown(803975) and ( CoA_GetTalentList()[805643]["isKnown"] or CoA_GetTalentList()[805634]["isKnown"])	then
-					VUHDO_DF_TOOL_ROLES[anInfo["name"]] = VUHDO_ID_MELEE_TANK
-					return VUHDO_ID_MELEE_TANK
-				else
-					VUHDO_DF_TOOL_ROLES[anInfo["name"]] = VUHDO_ID_MELEE_DAMAGE
-					return VUHDO_ID_MELEE_DAMAGE
-				end
-			end
+		if (tFound) then
+			return tFound;
 		end
-	else
-		-- LOGIC FOR UNIT INSPECTION ( NOT YET IMPLEMENTED BY ASCENSION )
-	end
-end
-
-local function CoA_Determine_Role_By_Specialization(anInfo)
-	local activeSpec
-	if SpellKitAdvanced.BuildSelectMenu.currentSpec then
-		activeSpec = C_CharacterAdvancement.GetEntryByInternalID(SpellKitAdvanced.BuildSelectMenu.currentSpec).Tab
-
-		if COA_ROLE_BY_SPEC[activeSpec] == nil then
-			CA_debug_from("CoA_RoleDeterminator","Specialization "..activeSpec.." is Unknown","ce7e00")
-		elseif COA_ROLE_BY_SPEC[activeSpec] == VUHDO_ID_TYPE_SPECIAL then
-				CA_debug_from("CoA_RoleDeterminator","Specialization "..activeSpec.." requires talent check.","ce7e00")
-		else
-			VUHDO_DF_TOOL_ROLES[anInfo["name"]] = COA_ROLE_BY_SPEC[activeSpec]
-			return COA_ROLE_BY_SPEC[activeSpec]
-		end
-	else
-		CA_debug_from("CoA_RoleDeterminator","Player has not selected a Primary Specialization","ce7e00")
 	end
 
+	return nil;
 end
 
-local function CoA_Determine_Role_By_Class(anInfo)
-	local uniClass = anInfo["classId"]
 
-	-- CA_debug_from("CoA_RoleDeterminator","Checking "..VUHDO_ID_CLASSES[uniClass],"ce7e00")
-	if COA_ROLE_BY_CLASS[uniClass] == nil then
-			CA_debug_from("CoA_RoleDeterminator","Class "..VUHDO_ID_CLASSES[uniClass].. " is Unknown","ce7e00")
-	elseif COA_ROLE_BY_CLASS[uniClass] == VUHDO_ID_TYPE_SPECIAL then
-			CA_debug_from("CoA_RoleDeterminator","Class "..VUHDO_ID_CLASSES[uniClass].. " requires specialization check.","ce7e00")
-	else
-		VUHDO_DF_TOOL_ROLES[anInfo["name"]] = COA_ROLE_BY_CLASS[uniClass]
-		return COA_ROLE_BY_CLASS[uniClass]
+
+--
+local function VUHDO_setCoaSpec(aTable, aName, aSpecId)
+	if (aName == nil or aTable[aName] == aSpecId) then
+		return;
 	end
+
+	aTable[aName] = aSpecId;
+	VUHDO_normalRaidReload();
 end
 
+
+
+-- Role of a custom class unit, nil if unknown or not a CoA custom class
 function CoA_Determine_Role(anInfo)
-	if not IsCustomClass(anInfo["unit"]) then 
-		return
-	end
-	if not SpellKitAdvanced then
-		return
+	local tUnit = anInfo["unit"];
+	if (not VUHDO_isCoaCustomClassUnit(tUnit)) then
+		return nil;
 	end
 
-	local results = (CoA_Determine_Role_By_Class(anInfo) or CoA_Determine_Role_By_Specialization(anInfo) or CoA_Determine_Role_By_Talents(anInfo))
-
-
-	if tostring((results and results>=60) or false) then
-		CA_debug_from("CoA_RoleDeterminator","Valid Role Found","ce7e00")
+	local tName = anInfo["name"];
+	local tSpecId;
+	if (UnitIsUnit(tUnit, "player")) then
+		tSpecId = VUHDO_getOwnCoaSpecId();
 	else
-		CA_debug_from("CoA_RoleDeterminator","Valid Role Not Found","ce7e00")
+		tSpecId = VUHDO_COA_REPORTED_SPECS[tName] or VUHDO_COA_INSPECTED_SPECS[tName];
+		if (tSpecId == nil) then
+			local _, tClass = UnitClass(tUnit);
+			tSpecId = VUHDO_getCoaSpecFromAuras(tUnit, tClass);
+			VUHDO_COA_INSPECTED_SPECS[tName] = tSpecId;
+		end
 	end
-	return results
+
+	return VUHDO_getCoaRoleForSpec(tSpecId);
 end
 
 
 
+--
+function VUHDO_coaResetSpecs()
+	twipe(VUHDO_COA_INSPECTED_SPECS);
+	twipe(VUHDO_COA_INSPECT_TIMES);
+	sPending = nil;
+end
 
 
+
+--
+local function VUHDO_broadcastCoaSpec()
+	if (not VUHDO_isCoaCustomClassUnit("player")) then
+		return;
+	end
+
+	if (GetNumRaidMembers() == 0 and GetNumPartyMembers() == 0) then
+		return;
+	end
+
+	local tSpecId = VUHDO_getOwnCoaSpecId();
+	if (tSpecId ~= nil) then
+		SendAddonMessage(VUHDO_COA_PREFIX, "SPEC " .. tSpecId, VUHDO_getAddOnDistribution());
+	end
+end
+
+
+
+--
+local function VUHDO_scheduleCoaBroadcast()
+	sBroadcastAt = GetTime() + VUHDO_COA_BROADCAST_DELAY;
+end
+
+
+
+-- Rebroadcast when somebody new joins, so they learn our spec
+local function VUHDO_coaRosterChanged()
+	local tIsNew = false;
+	local tNames = { };
+	for tName, _ in pairs(VUHDO_RAID_NAMES or { }) do
+		tNames[tName] = true;
+		if (not sKnownNames[tName]) then
+			tIsNew = true;
+		end
+	end
+	sKnownNames = tNames;
+
+	if (tIsNew) then
+		VUHDO_scheduleCoaBroadcast();
+	end
+end
+
+
+
+--
+local function VUHDO_parseCoaMessage(aMessage, aSender)
+	if (aSender == nil or aSender == UnitName("player")) then
+		return;
+	end
+
+	local tSpecId = tonumber(strmatch(aMessage or "", "^SPEC (%d+)$"));
+	if (tSpecId ~= nil and VUHDO_getCoaSpecInfo(tSpecId) ~= nil) then
+		VUHDO_setCoaSpec(VUHDO_COA_REPORTED_SPECS, aSender, tSpecId);
+	end
+end
+
+
+
+--
+local function VUHDO_shouldCoaInspect(aUnit, anInfo, aNow)
+	if (anInfo == nil or anInfo["isPet"] or not anInfo["connected"]) then
+		return false;
+	end
+
+	local tName = anInfo["name"];
+	if (UnitIsUnit(aUnit, "player") or VUHDO_COA_REPORTED_SPECS[tName] ~= nil
+		or VUHDO_MANUAL_ROLES[tName] ~= nil) then
+		return false;
+	end
+
+	local tLast = VUHDO_COA_INSPECT_TIMES[tName];
+	if (tLast ~= nil) then
+		local tWait = VUHDO_COA_INSPECTED_SPECS[tName] ~= nil and VUHDO_COA_INSPECT_REFRESH or VUHDO_COA_INSPECT_RETRY;
+		if (aNow - tLast < tWait) then
+			return false;
+		end
+	end
+
+	return UnitIsVisible(aUnit) and UnitIsPlayer(aUnit) and VUHDO_isCoaCustomClassUnit(aUnit);
+end
+
+
+
+--
+local function VUHDO_tryCoaInspect()
+	local tNow = GetTime();
+	if (sPending ~= nil) then
+		if (tNow - sPending["time"] < VUHDO_COA_INSPECT_TIMEOUT) then
+			return;
+		end
+		sPending = nil;
+	end
+
+	if (not VUHDO_CONFIG or not VUHDO_CONFIG["IS_SCAN_TALENTS"] or InCombatLockdown()
+		or (AscensionInspectFrame ~= nil and AscensionInspectFrame:IsShown())
+		or (InspectFrame ~= nil and InspectFrame:IsShown())) then
+		return;
+	end
+
+	for tUnit, tInfo in pairs(VUHDO_RAID or { }) do
+		if (tUnit ~= "target" and tUnit ~= "focus" and VUHDO_shouldCoaInspect(tUnit, tInfo, tNow)) then
+			VUHDO_COA_INSPECT_TIMES[tInfo["name"]] = tNow;
+			sPending = { ["name"] = tInfo["name"], ["guid"] = UnitGUID(tUnit), ["unit"] = tUnit, ["time"] = tNow };
+			if (not pcall(C_CharacterAdvancement.InspectUnit, tUnit)) then
+				sPending = nil;
+			end
+			return;
+		end
+	end
+end
+
+
+
+--
+local function VUHDO_coaInspectResult(aResult)
+	if (sPending == nil) then
+		return;
+	end
+
+	local tPending = sPending;
+	sPending = nil;
+	local tUnit = tPending["unit"];
+	if (aResult ~= "CA_INSPECT_OK" or UnitGUID(tUnit) ~= tPending["guid"]) then
+		return;
+	end
+
+	local _, tClass = UnitClass(tUnit);
+	local tSpecId = VUHDO_readInspectedCoaSpec(tUnit, tClass);
+	if (tSpecId ~= nil) then
+		VUHDO_setCoaSpec(VUHDO_COA_INSPECTED_SPECS, tPending["name"], tSpecId);
+	end
+end
+
+
+
+--
+local sElapsed = 0;
+local function VUHDO_coaOnUpdate(aFrame, anElapsed)
+	sElapsed = sElapsed + anElapsed;
+	if (sElapsed < VUHDO_COA_INSPECT_INTERVAL) then
+		return;
+	end
+	sElapsed = 0;
+
+	if (not VUHDO_VARIABLES_LOADED) then
+		return;
+	end
+
+	if (sBroadcastAt ~= nil and GetTime() >= sBroadcastAt) then
+		sBroadcastAt = nil;
+		VUHDO_broadcastCoaSpec();
+	end
+
+	if (VUHDO_isCoaInspectApi()) then
+		VUHDO_tryCoaInspect();
+	end
+end
+
+
+
+--
+local function VUHDO_coaOnEvent(aFrame, anEvent, anArg1, anArg2, anArg3, anArg4)
+	if ("CHAT_MSG_ADDON" == anEvent) then
+		if (anArg1 == VUHDO_COA_PREFIX) then
+			VUHDO_parseCoaMessage(anArg2, anArg4);
+		end
+	elseif ("INSPECT_CHARACTER_ADVANCEMENT_RESULT" == anEvent) then
+		VUHDO_coaInspectResult(anArg1);
+	elseif ("ASCENSION_CA_SPECIALIZATION_ACTIVE_ID_CHANGED" == anEvent) then
+		if (VUHDO_VARIABLES_LOADED) then
+			VUHDO_resetTalentScan("player");
+			VUHDO_normalRaidReload();
+		end
+		VUHDO_scheduleCoaBroadcast();
+	elseif ("PLAYER_ENTERING_WORLD" == anEvent) then
+		VUHDO_scheduleCoaBroadcast();
+	else -- PARTY_MEMBERS_CHANGED, RAID_ROSTER_UPDATE
+		VUHDO_coaRosterChanged();
+	end
+end
+
+
+
+-- Nothing is registered unless the client has the CoA spec API
+if (VUHDO_isCoaSpecApi()) then
+	local tFrame = CreateFrame("Frame");
+	tFrame:SetScript("OnEvent", VUHDO_coaOnEvent);
+	tFrame:SetScript("OnUpdate", VUHDO_coaOnUpdate);
+	for _, tEvent in ipairs({ "CHAT_MSG_ADDON", "PLAYER_ENTERING_WORLD", "PARTY_MEMBERS_CHANGED", "RAID_ROSTER_UPDATE",
+		"INSPECT_CHARACTER_ADVANCEMENT_RESULT", "ASCENSION_CA_SPECIALIZATION_ACTIVE_ID_CHANGED" }) do
+		pcall(tFrame.RegisterEvent, tFrame, tEvent);
+	end
+end

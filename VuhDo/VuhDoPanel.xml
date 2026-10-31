@@ -233,6 +233,17 @@
             </Anchors>
 		        <Frames>
 
+              <!-- Absorb (below health, fills the missing health) -->
+              <StatusBar name="$parentAbBar" inherits="VuhDoStatusBar">
+                <Anchors>
+                  <Anchor point="TOPLEFT" relativePoint="TOPLEFT">
+                    <Offset>
+                      <AbsDimension x="0" y="0"/>
+                    </Offset>
+                  </Anchor>
+                </Anchors>
+              </StatusBar>
+
               <StatusBar name="$parentHlBar" inherits="VuhDoStatusBar">
                 <Anchors>
                   <Anchor point="TOPLEFT" relativePoint="TOPLEFT">
@@ -403,9 +414,20 @@
 										-- Swiftmend indicator
                     <Texture name="$parentIc51" hidden="true" file="Interface\AddOns\VuhDo\Images\icon_red">
                     </Texture>
-   
+
                   </Layer>
         				</Layers>
+              </StatusBar>
+
+              <!-- Overshield marker (above health, at the full end of the bar) -->
+              <StatusBar name="$parentOsBar" inherits="VuhDoStatusBar">
+                <Anchors>
+                  <Anchor point="TOPLEFT" relativePoint="TOPLEFT">
+                    <Offset>
+                      <AbsDimension x="0" y="0"/>
+                    </Offset>
+                  </Anchor>
+                </Anchors>
               </StatusBar>
 
 		        </Frames>

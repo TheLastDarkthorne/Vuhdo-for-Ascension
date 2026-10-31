@@ -59,7 +59,8 @@ end
 --
 function VUHDO_setLhcEnabled()
 	local tHealComm = LibStub("LibHealComm-4.0");
-	if (VUHDO_CONFIG["SHOW_INCOMING"] or VUHDO_CONFIG["SHOW_OWN_INCOMING"]) then
+	-- The client's own heal prediction replaces LibHealComm where it exists
+	if ((VUHDO_CONFIG["SHOW_INCOMING"] or VUHDO_CONFIG["SHOW_OWN_INCOMING"]) and not VUHDO_isClientHealPrediction()) then
 		tHealComm.RegisterCallback(VuhDoHealComms, "HealComm_HealStarted");
 		tHealComm.RegisterCallback(VuhDoHealComms, "HealComm_HealUpdated", "HealComm_HealStarted");
 		tHealComm.RegisterCallback(VuhDoHealComms, "HealComm_HealDelayed", "HealComm_HealStarted");

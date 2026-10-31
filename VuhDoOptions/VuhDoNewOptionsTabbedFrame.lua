@@ -197,6 +197,10 @@ function VUHDO_yesNoDiscardChangesCallback(aDecision)
 		VUHDO_B_SPELLS_KEYBOARD = nil;
 		VUHDO_B_BOUQUETS = nil;
 
+		-- Custom buffs live in the buff settings just restored
+		VUHDO_initBuffSettings();
+		VUHDO_initBuffsFromSpellBook();
+
 		VUHDO_initAllBurstCaches();
 		VUHDO_initBouquetComboModel();
 		VUHDO_reloadUI();

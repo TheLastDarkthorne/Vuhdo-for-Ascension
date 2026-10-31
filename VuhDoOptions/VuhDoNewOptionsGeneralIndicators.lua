@@ -183,6 +183,21 @@ local VUHDO_INDICATORS = {
 			},
 		},
 	},
+
+	{ -- Absorb Bar (follows the health bar's growth and orientation)
+		["name"] = VUHDO_I18N_ABSORB_BAR,
+		["model"] = "VUHDO_INDICATOR_CONFIG.BOUQUETS.ABSORB_BAR",
+		["icon"] = "Indicator_HealthBar",
+		["custom"] = {
+			{
+				["name"] = VUHDO_I18N_BAR_TEXTURE,
+				["type"] = VUHDO_ENUMERATOR_CONSTRAINTS,
+				["enumerator"] = VUHDO_STATUS_BARS,
+				["model"] = "VUHDO_INDICATOR_CONFIG.CUSTOM.ABSORB_BAR.TEXTURE",
+				["tooltip"] = VUHDO_I18N_TT_076,
+			},
+		},
+	},
 }
 
 

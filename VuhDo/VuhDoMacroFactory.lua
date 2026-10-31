@@ -452,7 +452,16 @@ local tMacroId;
 local tBindingName;
 local tCommand;
 
+VUHDO_MACROS_PENDING = false;
+
 function VUHDO_initKeyboardMacros()
+	-- Override bindings are protected; redo them when combat ends (PLAYER_REGEN_ENABLED)
+	if (InCombatLockdown()) then
+		VUHDO_MACROS_PENDING = true;
+		return;
+	end
+	VUHDO_MACROS_PENDING = false;
+
 	VUHDO_IS_SFX_ENABLED = tonumber(GetCVar("Sound_EnableSFX")) == 1;
 
 	if (VUHDO_SPELLS_KEYBOARD == nil) then

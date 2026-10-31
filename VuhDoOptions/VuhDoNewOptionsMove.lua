@@ -13,7 +13,7 @@ end
 
 --
 function VUHDO_newOptionsMoveOnHide()
-  VuhDoNewOptionsTabbedFrame:SetHeight(420);
+  VuhDoNewOptionsTabbedFrame:SetHeight(460);
 	VUHDO_IS_PANEL_CONFIG = false;
   VUHDO_CONFIG_SHOW_RAID = true;
 	VUHDO_clearUndefinedModelEntries();

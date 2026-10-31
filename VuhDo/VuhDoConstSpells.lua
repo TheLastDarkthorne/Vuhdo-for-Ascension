@@ -103,6 +103,9 @@ VUHDO_SPELL_ID_ZAP_MAGIC = GetSpellInfo(806098);
 -- PROPHET
 VUHDO_SPELL_ID_ANTIVENOM = GetSpellInfo(800905);
 
+-- WITCHDOCTOR (nil on clients without the spell; only use it guarded)
+VUHDO_SPELL_ID_RECLAIM_SOUL = GetSpellInfo(803620);
+
 
 ------------------
 -- Buff categories

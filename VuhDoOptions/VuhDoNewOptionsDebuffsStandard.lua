@@ -20,7 +20,14 @@ local tText;
 function VUHDO_saveDebuffIgnoreClicked(aButton)
 	local tText = VUHDO_GLOBAL[aButton:GetParent():GetName() .. "IgnoreComboBoxEditBox"]:GetText();
 	if (tText ~= nil) then
-		VUHDO_DEBUFF_BLACKLIST[strtrim(tText)] = true;
+		tText = strtrim(tText);
+		if (tonumber(tText) ~= nil) then
+			local tSpellName = GetSpellInfo(tonumber(tText));
+			if (tSpellName ~= nil) then
+				tText = tSpellName;
+			end
+		end
+		VUHDO_DEBUFF_BLACKLIST[tText] = true;
 		VUHDO_initDebuffIgnoreComboModel();
 		VUHDO_GLOBAL[aButton:GetParent():GetName() .. "IgnoreComboBox"]:Hide();
 		VUHDO_GLOBAL[aButton:GetParent():GetName() .. "IgnoreComboBox"]:Show();
@@ -33,7 +40,14 @@ end
 function VUHDO_deleteDebuffIgnoreClicked(aButton)
 	local tText = VUHDO_GLOBAL[aButton:GetParent():GetName() .. "IgnoreComboBoxEditBox"]:GetText();
 	if (tText ~= nil) then
-		VUHDO_DEBUFF_BLACKLIST[strtrim(tText)] = nil;
+		tText = strtrim(tText);
+		if (tonumber(tText) ~= nil) then
+			local tSpellName = GetSpellInfo(tonumber(tText));
+			if (tSpellName ~= nil) then
+				tText = tSpellName;
+			end
+		end
+		VUHDO_DEBUFF_BLACKLIST[tText] = nil;
 		VUHDO_initDebuffIgnoreComboModel();
 		VUHDO_GLOBAL[aButton:GetParent():GetName() .. "IgnoreComboBox"]:Hide();
 		VUHDO_GLOBAL[aButton:GetParent():GetName() .. "IgnoreComboBox"]:Show();

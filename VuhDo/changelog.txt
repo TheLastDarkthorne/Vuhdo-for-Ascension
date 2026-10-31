@@ -1,3 +1,38 @@
+Vuhdo for Conquest of Azeroth (unreleased)
+
+New:
+-- Shield absorbs on the health bar. The shield fills the missing health; a thin marker at the
+   end of the bar shows a shield bigger than the missing health. Needs a client that reports
+   absorb amounts, such as the Conquest of Azeroth client. Turn it on or off and pick its color in
+   General > Incoming; pick its texture or a color bouquet in General > Indicators > Absorb Bar.
+-- Buffs > Custom: track your own buffs by spell name, spell ID or by dragging the spell from your
+   spellbook. Choose who to watch it on (yourself, group members or one player), then turn it on
+   and fine-tune it under Buffs > Config, for example to watch only your own group or the tanks.
+-- Incoming heals use the client's own heal prediction where it has one (Conquest of Azeroth),
+   which also covers the custom classes. Other clients keep using LibHealComm.
+-- Sort panels by role, and a manual "Support" role (from the VuhDo_Ascension fork).
+-- Roles of the Conquest of Azeroth classes come from the game's spec data: tank and healer specs
+   keep their role, specs the game marks as Support (Ancestry, Inspiration, Farstrider,
+   Fleshweaver, Wind, Grovekeeper) go to Support. Your own spec is read from the client, other
+   VuhDo users share theirs with the group, and everyone else is inspected when close by (the
+   talent Scan option under General > Scan). Stock classes, Heroes and other clients keep the usual role checks; the role
+   override menu still wins. The role icon has a Support icon.
+-- Colors > Classes has a color for every Conquest of Azeroth class (from the VuhDo_Ascension fork).
+
+Bugfixes:
+-- Class colors no longer reset at every login.
+-- The class color options edit the class IDs VuhDo uses now.
+-- Buffs: each class has its own buff list again; free-pick Heroes get every class's buffs.
+-- Buffs: removing or reordering buffs no longer hides the ones after a gap.
+-- Spells the client doesn't know are dropped from the buff lists instead of causing errors.
+-- Keyboard macros changed in combat are applied when combat ends instead of being blocked.
+-- The debuff blacklist accepts spell IDs (from the VuhDo_Ascension fork).
+-- Witch Doctor's Reclaim Soul counts as a resurrection spell when the client knows it.
+-- The incoming heal options' "on hide" handler was misplaced in the XML and never ran.
+-- Role detection no longer errors on clients without the Conquest of Azeroth class functions.
+
+--------------------------------------------------------------
+
 Vuhdo for Ascension version 3.2 - By Andrew
 
 Changes:

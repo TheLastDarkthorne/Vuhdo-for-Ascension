@@ -15,8 +15,10 @@ local VUHDO_updateHealthBarsFor;
 
 local GetTime = GetTime;
 local strsub = strsub;
+local UnitIsUnit = UnitIsUnit;
 local sIsCasted, sIsChannelled, sIsHots, sIsBombed;
 local sIsOthers, sIsOwn;
+local sIsShowAbsorb;
 local sCastedSecs, sChannelledSecs, sHotsSecs, sBombedSecs;
 function VUHDO_healCommAdapterInitBurst()
 	VUHDO_CONFIG = VUHDO_GLOBAL["VUHDO_CONFIG"];
@@ -28,6 +30,7 @@ function VUHDO_healCommAdapterInitBurst()
 	sIsBombed = VUHDO_CONFIG["SHOW_INC_BOMBED"];
 	sIsOthers = VUHDO_CONFIG["SHOW_INCOMING"];
 	sIsOwn = VUHDO_CONFIG["SHOW_OWN_INCOMING"];
+	sIsShowAbsorb = VUHDO_CONFIG["SHOW_ABSORB"];
   sCastedSecs = VUHDO_CONFIG["INC_CASTED_SECS"]
   sChannelledSecs = VUHDO_CONFIG["INC_CHANNELLED_SECS"];
   sHotsSecs = VUHDO_CONFIG["INC_HOTS_SECS"]
@@ -38,6 +41,67 @@ end
 ----------------------------------------------------
 
 
+-- The CoA (Ascension) client predicts heals in its own interface code
+-- (HealPredictionUtil.lua, shared between clients via addon messages) and
+-- tracks shield amounts the server sends in Extensions.dll. Stock 3.3.5a
+-- clients have neither, so LibHealComm stays the fallback there.
+local UnitGetIncomingHeals = UnitGetIncomingHeals;
+local UnitGetTotalAbsorbs = UnitGetTotalAbsorbs;
+local sIsClientHealPrediction = UnitGetIncomingHeals ~= nil;
+local sIsClientAbsorbs = UnitGetTotalAbsorbs ~= nil;
+
+
+
+--
+function VUHDO_isClientHealPrediction()
+	return sIsClientHealPrediction;
+end
+
+
+
+--
+function VUHDO_isClientAbsorbs()
+	return sIsClientAbsorbs;
+end
+
+
+
+--
+local tAllInc, tOwnInc;
+local function VUHDO_getClientIncHeal(aUnit)
+	if (aUnit == nil or not (sIsOthers or sIsOwn)) then
+		return 0;
+	end
+
+	tAllInc = UnitGetIncomingHeals(aUnit) or 0;
+	-- The client can't split heals on the player by caster, so show them all
+	if ((sIsOthers and sIsOwn) or UnitIsUnit(aUnit, "player")) then
+		return tAllInc;
+	end
+
+	tOwnInc = UnitGetIncomingHeals(aUnit, "player") or 0;
+	if (sIsOwn) then
+		return tOwnInc;
+	elseif (tAllInc > tOwnInc) then
+		return tAllInc - tOwnInc;
+	else
+		return 0;
+	end
+end
+
+
+
+--
+function VUHDO_getUnitAbsorbs(aUnit)
+	if (not sIsClientAbsorbs or not sIsShowAbsorb or aUnit == nil) then
+		return 0;
+	end
+
+	return UnitGetTotalAbsorbs(aUnit) or 0;
+end
+
+
+
 local VUHDO_INC_HEAL = { };
 local VUHDO_INC_END = { };
 
@@ -45,6 +109,10 @@ local VUHDO_INC_END = { };
 --
 local tInfo;
 function VUHDO_getIncHealOnUnit(aName)
+	if (sIsClientHealPrediction) then
+		return VUHDO_getClientIncHeal(VUHDO_RAID_NAMES[aName]);
+	end
+
 	return VUHDO_INC_HEAL[aName] or 0;
 end
 

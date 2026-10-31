@@ -571,7 +571,8 @@ function VUHDO_initBuffsFromSpellBook()
 		end
 	end
 
-	if (VUHDO_PLAYER_CLASS == "DRUID") then
+	-- The lumped all-class buff list used to sit under DRUID; it is HERO's now
+	if (VUHDO_PLAYER_CLASS == "HERO") then
 		_, _, tIcon = GetSpellInfo(50720)
 		VUHDO_BUFFS[VUHDO_SPELL_ID_BUFF_VIGILANCE] = {
 			["present"] = true,
