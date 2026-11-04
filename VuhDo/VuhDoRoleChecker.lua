@@ -24,6 +24,7 @@ local UnitStat = UnitStat;
 local UnitDefense = UnitDefense;
 local UnitGroupRolesAssigned = UnitGroupRolesAssigned;
 local UnitLevel = UnitLevel;
+local UnitIsPlayer = UnitIsPlayer;
 local UnitPowerType = UnitPowerType;
 local VUHDO_isUnitInModel;
 local pairs = pairs;
@@ -293,7 +294,8 @@ local tClassId, tName;
 function VUHDO_determineRole(aUnit)
 	tInfo = VUHDO_RAID[aUnit];
 
-	if (tInfo == nil or tInfo["isPet"]) then
+	-- NPCs (target or focus) have no role, and their names would pile up in VUHDO_FIX_ROLES
+	if (tInfo == nil or tInfo["isPet"] or not UnitIsPlayer(aUnit)) then
 		return nil;
 	end
 

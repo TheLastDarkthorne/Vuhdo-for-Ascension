@@ -735,6 +735,8 @@ function VUHDO_slashCmd(aCommand)
 		VUHDO_Msg(tMessage);
 		VUHDO_saveCurrentProfile();
 
+	elseif (tCommandWord == "specs") then
+		VUHDO_coaPrintSpecs();
 	elseif (tCommandWord == "ui") then
 	  VUHDO_reloadUI();
 	elseif (tCommandWord == "rui") then

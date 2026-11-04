@@ -10,16 +10,23 @@ local VUHDO_COA_INSPECT_INTERVAL = 2;
 local VUHDO_COA_INSPECT_TIMEOUT = 5;
 local VUHDO_COA_INSPECT_REFRESH = 300;
 local VUHDO_COA_INSPECT_RETRY = 30;
+local VUHDO_COA_INSPECT_MAX_RETRY = 600;
+local VUHDO_COA_OWN_SPEC_SECS = 5;
 local VUHDO_COA_BROADCAST_DELAY = 3;
 
 local VUHDO_COA_REPORTED_SPECS = { }; -- name -> spec ID, sent by that player's VuhDo
 local VUHDO_COA_INSPECTED_SPECS = { }; -- name -> spec ID, from an inspect or a passive aura
 local VUHDO_COA_INSPECT_TIMES = { }; -- name -> time of the last inspect attempt
+local VUHDO_COA_INSPECT_TRIES = { }; -- name -> inspects since the last one that found a spec
 local VUHDO_COA_SPECS_BY_CLASS = { };
+local VUHDO_COA_LAST_INSPECTS = { }; -- name -> text about the last inspect, for /vd specs
+local VUHDO_COA_SPEC_INFOS = { }; -- spec ID -> info, false if unknown. The client's lookup scans every class's specs and builds new tables each call
 
 local sPending = nil; -- { name, guid, unit, time } of our open inspect request
 local sBroadcastAt = nil;
 local sKnownNames = { };
+local sOwnSpecId = nil;
+local sOwnSpecTime = nil;
 
 local twipe = table.wipe;
 local pcall = pcall;
@@ -78,11 +85,22 @@ local function VUHDO_getCoaSpecInfo(aSpecId)
 		return nil;
 	end
 
+	local tCached = VUHDO_COA_SPEC_INFOS[aSpecId];
+	if (tCached ~= nil) then
+		return tCached or nil;
+	end
+
 	local tIsOk, tInfo = pcall(C_ClassInfo.GetSpecInfoByID, aSpecId);
-	if (tIsOk and type(tInfo) == "table") then
+	if (not tIsOk) then
+		return nil;
+	end
+
+	if (type(tInfo) == "table") then
+		VUHDO_COA_SPEC_INFOS[aSpecId] = tInfo;
 		return tInfo;
 	end
 
+	VUHDO_COA_SPEC_INFOS[aSpecId] = false;
 	return nil;
 end
 
@@ -101,6 +119,7 @@ local function VUHDO_getCoaClassSpecs(aClass)
 			for _, tToken in ipairs(tTokens) do
 				local tIsInfoOk, tInfo = pcall(C_ClassInfo.GetSpecInfo, aClass, tToken);
 				if (tIsInfoOk and type(tInfo) == "table" and tInfo["ID"] ~= nil) then
+					tInfo["vuhdoToken"] = strupper(tostring(tToken));
 					tinsert(tSpecs, tInfo);
 				end
 			end
@@ -136,7 +155,7 @@ end
 
 
 --
-local function VUHDO_getOwnCoaSpecId()
+local function VUHDO_readOwnCoaSpecId()
 	if (type(C_CharacterAdvancement) == "table" and type(C_CharacterAdvancement.GetActiveChrSpec) == "function") then
 		local tIsOk, tSpecId = pcall(C_CharacterAdvancement.GetActiveChrSpec);
 		if (tIsOk and VUHDO_getCoaSpecInfo(tSpecId) ~= nil) then
@@ -152,6 +171,19 @@ local function VUHDO_getOwnCoaSpecId()
 	end
 
 	return nil;
+end
+
+
+
+-- GetSpecialization builds spec tables too, so read at most every few seconds
+local function VUHDO_getOwnCoaSpecId()
+	local tNow = GetTime();
+	if (sOwnSpecTime == nil or tNow - sOwnSpecTime >= VUHDO_COA_OWN_SPEC_SECS) then
+		sOwnSpecId = VUHDO_readOwnCoaSpecId();
+		sOwnSpecTime = tNow;
+	end
+
+	return sOwnSpecId;
 end
 
 
@@ -175,10 +207,56 @@ end
 
 
 
--- After a successful inspect: which spec's passive does the unit know?
-local function VUHDO_readInspectedCoaSpec(aUnit, aClass)
+-- The spec whose tree holds most of the known talents, or whose passive is known
+local function VUHDO_getCoaSpecFromBuild(aUnit, aClass, aBuild)
+	local tGetBuild = C_CharacterAdvancement.GetInspectedBuild;
+	local tGetEntry = C_CharacterAdvancement.GetEntryByInternalID;
+	if (type(tGetBuild) ~= "function" or type(tGetEntry) ~= "function") then
+		return nil, 0;
+	end
+
+	local tIsOk, tEntries = pcall(tGetBuild, aUnit, aBuild);
+	if (not tIsOk or type(tEntries) ~= "table") then
+		return nil, 0;
+	end
+
+	local tSpecs = VUHDO_getCoaClassSpecs(aClass);
+	local tCounts = { };
+	for _, tKnown in ipairs(tEntries) do
+		local tEntryId = tKnown["EntryId"];
+		for _, tInfo in ipairs(tSpecs) do
+			if (tEntryId ~= nil and tInfo["PassiveID"] == tEntryId) then
+				return tInfo["ID"], #tEntries;
+			end
+		end
+
+		local tIsEntryOk, tEntry = pcall(tGetEntry, tEntryId);
+		if (tIsEntryOk and type(tEntry) == "table" and tEntry["Tab"] ~= nil) then
+			local tTab = strupper(tostring(tEntry["Tab"]));
+			tCounts[tTab] = (tCounts[tTab] or 0) + 1;
+		end
+	end
+
+	local tBest, tBestCount, tIsTie = nil, 0, false;
+	for _, tInfo in ipairs(tSpecs) do
+		local tCount = tCounts[tInfo["vuhdoToken"]] or 0;
+		if (tCount > tBestCount) then
+			tBest, tBestCount, tIsTie = tInfo["ID"], tCount, false;
+		elseif (tCount > 0 and tCount == tBestCount) then
+			tIsTie = true;
+		end
+	end
+
+	return (not tIsTie) and tBest or nil, #tEntries;
+end
+
+
+
+-- After a successful inspect: which spec does the unit play?
+local function VUHDO_readInspectedCoaSpec(aUnit, aClass, aName)
 	local tIsOk, tActive, tUnlocked = pcall(C_CharacterAdvancement.GetInspectInfo, aUnit);
 	if (not tIsOk) then
+		VUHDO_COA_LAST_INSPECTS[aName] = "GetInspectInfo failed";
 		return nil;
 	end
 
@@ -190,6 +268,20 @@ local function VUHDO_readInspectedCoaSpec(aUnit, aClass)
 			tinsert(tBuilds, tUnlocked[tActive]);
 		end
 	end
+	if (tActive == nil or tActive == 0) then
+		tinsert(tBuilds, 1); -- the client's window falls back to the first build
+	end
+
+	local tNumEntries = 0;
+	for _, tBuild in ipairs(tBuilds) do
+		local tSpecId, tCount = VUHDO_getCoaSpecFromBuild(aUnit, aClass, tBuild);
+		tNumEntries = tNumEntries + tCount;
+		if (tSpecId ~= nil) then
+			VUHDO_COA_LAST_INSPECTS[aName] = "found from build " .. tBuild;
+			return tSpecId;
+		end
+	end
+	VUHDO_COA_LAST_INSPECTS[aName] = "no spec in " .. tNumEntries .. " entries, active build " .. tostring(tActive);
 
 	local tGetEntry = C_CharacterAdvancement.GetEntryBySpellID;
 	for _, tBuild in ipairs(tBuilds) do
@@ -217,6 +309,7 @@ local function VUHDO_readInspectedCoaSpec(aUnit, aClass)
 		end
 
 		if (tFound) then
+			VUHDO_COA_LAST_INSPECTS[aName] = "found from passive, build " .. tBuild;
 			return tFound;
 		end
 	end
@@ -263,11 +356,59 @@ end
 
 
 
+-- Does this client have the CoA classes?
+function VUHDO_isCoaClient()
+	return VUHDO_isCoaSpecApi();
+end
+
+
+
+-- /vd specs: what role detection knows about each group member
+function VUHDO_coaPrintSpecs()
+	if (not VUHDO_isCoaSpecApi()) then
+		VUHDO_Msg("This client has no Conquest of Azeroth spec data.");
+		return;
+	end
+
+	for tUnit, tInfo in pairs(VUHDO_RAID) do
+		if (not tInfo["isPet"] and tUnit ~= "target" and tUnit ~= "focus") then
+			local tName = tInfo["name"];
+			local tSpecId, tSource;
+			if (UnitIsUnit(tUnit, "player")) then
+				tSpecId, tSource = VUHDO_getOwnCoaSpecId(), "own client";
+			elseif (VUHDO_COA_REPORTED_SPECS[tName] ~= nil) then
+				tSpecId, tSource = VUHDO_COA_REPORTED_SPECS[tName], "their VuhDo";
+			elseif (VUHDO_COA_INSPECTED_SPECS[tName] ~= nil) then
+				tSpecId, tSource = VUHDO_COA_INSPECTED_SPECS[tName], "inspect";
+			else
+				tSource = "unknown";
+			end
+
+			local tSpecInfo = VUHDO_getCoaSpecInfo(tSpecId);
+			local _, tClass = UnitClass(tUnit);
+			VUHDO_Msg(tostring(tName) .. " (" .. tostring(tClass) .. "): role " .. tostring(tInfo["role"])
+				.. ", spec " .. tostring(tSpecInfo and tSpecInfo["Name"]) .. " from " .. tSource
+				.. ", inspects " .. tostring(VUHDO_COA_INSPECT_TRIES[tName] or 0)
+				.. ", last: " .. tostring(VUHDO_COA_LAST_INSPECTS[tName] or "none"));
+		end
+	end
+
+	if (not VUHDO_isCoaInspectApi()) then
+		VUHDO_Msg("This client has no inspect functions.");
+	elseif (not VUHDO_CONFIG["IS_SCAN_TALENTS"]) then
+		VUHDO_Msg("Inspecting is off: the talent Scan option under General > Scan.");
+	end
+end
+
+
+
 --
 function VUHDO_coaResetSpecs()
 	twipe(VUHDO_COA_INSPECTED_SPECS);
 	twipe(VUHDO_COA_INSPECT_TIMES);
+	twipe(VUHDO_COA_INSPECT_TRIES);
 	sPending = nil;
+	sOwnSpecTime = nil;
 end
 
 
@@ -344,7 +485,15 @@ local function VUHDO_shouldCoaInspect(aUnit, anInfo, aNow)
 
 	local tLast = VUHDO_COA_INSPECT_TIMES[tName];
 	if (tLast ~= nil) then
-		local tWait = VUHDO_COA_INSPECTED_SPECS[tName] ~= nil and VUHDO_COA_INSPECT_REFRESH or VUHDO_COA_INSPECT_RETRY;
+		local tWait = VUHDO_COA_INSPECT_REFRESH;
+		if (VUHDO_COA_INSPECTED_SPECS[tName] == nil) then
+			-- Doubles with every inspect that doesn't find a spec
+			tWait = VUHDO_COA_INSPECT_RETRY * 2 ^ ((VUHDO_COA_INSPECT_TRIES[tName] or 1) - 1);
+			if (tWait > VUHDO_COA_INSPECT_MAX_RETRY) then
+				tWait = VUHDO_COA_INSPECT_MAX_RETRY;
+			end
+		end
+
 		if (aNow - tLast < tWait) then
 			return false;
 		end
@@ -374,6 +523,7 @@ local function VUHDO_tryCoaInspect()
 	for tUnit, tInfo in pairs(VUHDO_RAID or { }) do
 		if (tUnit ~= "target" and tUnit ~= "focus" and VUHDO_shouldCoaInspect(tUnit, tInfo, tNow)) then
 			VUHDO_COA_INSPECT_TIMES[tInfo["name"]] = tNow;
+			VUHDO_COA_INSPECT_TRIES[tInfo["name"]] = (VUHDO_COA_INSPECT_TRIES[tInfo["name"]] or 0) + 1;
 			sPending = { ["name"] = tInfo["name"], ["guid"] = UnitGUID(tUnit), ["unit"] = tUnit, ["time"] = tNow };
 			if (not pcall(C_CharacterAdvancement.InspectUnit, tUnit)) then
 				sPending = nil;
@@ -395,12 +545,14 @@ local function VUHDO_coaInspectResult(aResult)
 	sPending = nil;
 	local tUnit = tPending["unit"];
 	if (aResult ~= "CA_INSPECT_OK" or UnitGUID(tUnit) ~= tPending["guid"]) then
+		VUHDO_COA_LAST_INSPECTS[tPending["name"]] = tostring(aResult);
 		return;
 	end
 
 	local _, tClass = UnitClass(tUnit);
-	local tSpecId = VUHDO_readInspectedCoaSpec(tUnit, tClass);
+	local tSpecId = VUHDO_readInspectedCoaSpec(tUnit, tClass, tPending["name"]);
 	if (tSpecId ~= nil) then
+		VUHDO_COA_INSPECT_TRIES[tPending["name"]] = nil;
 		VUHDO_setCoaSpec(VUHDO_COA_INSPECTED_SPECS, tPending["name"], tSpecId);
 	end
 end
@@ -416,7 +568,7 @@ local function VUHDO_coaOnUpdate(aFrame, anElapsed)
 	end
 	sElapsed = 0;
 
-	if (not VUHDO_VARIABLES_LOADED) then
+	if (not VUHDO_isVariablesLoaded()) then
 		return;
 	end
 
@@ -441,7 +593,8 @@ local function VUHDO_coaOnEvent(aFrame, anEvent, anArg1, anArg2, anArg3, anArg4)
 	elseif ("INSPECT_CHARACTER_ADVANCEMENT_RESULT" == anEvent) then
 		VUHDO_coaInspectResult(anArg1);
 	elseif ("ASCENSION_CA_SPECIALIZATION_ACTIVE_ID_CHANGED" == anEvent) then
-		if (VUHDO_VARIABLES_LOADED) then
+		sOwnSpecTime = nil;
+		if (VUHDO_isVariablesLoaded()) then
 			VUHDO_resetTalentScan("player");
 			VUHDO_normalRaidReload();
 		end

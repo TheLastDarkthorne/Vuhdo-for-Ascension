@@ -38,6 +38,7 @@ local function CA_debug(...)
 end
 
 function CA_debug_from(caller,msg,color)
+	if not VUHDO_DEBUG then return end
 	if not color then color  = "6FA8DC" end
 	CA_debug("|cff"..color.."["..caller.."]|r "..msg)
 end
@@ -720,17 +721,25 @@ end
 
 
 function PlaceRDFIcon(aButton,tIcon,callerFunctionName,debugHeaderTextcolor)
-	local tRole = VUHDO_determineRole(aButton['raidid'])
+	-- The role is kept up to date by raid reloads, and this runs on every bar redraw
+	local tInfo = VUHDO_RAID and VUHDO_RAID[aButton['raidid']]
+	local tRole = tInfo and tInfo["role"]
 	local tMouseOverUnit = VUHDO_getCurrentMouseOver();
 	if (tRole ~= nil) then
 		tIcon:SetWidth(25);
 		tIcon:SetHeight(25);
-		if (VUHDO_ID_MELEE_TANK == tRole) then
-			tIcon:SetTexCoord(GetTexCoordsForRole("TANK"));
-		elseif (VUHDO_ID_RANGED_HEAL == tRole) then
-			tIcon:SetTexCoord(GetTexCoordsForRole("HEALER"));
+		if (VUHDO_ID_SUPPORT == tRole) then
+			tIcon:SetTexture("Interface\\AddOns\\VuhDo\\Images\\roleicons\\support");
+			tIcon:SetTexCoord(0, 1, 0, 1);
 		else
-			tIcon:SetTexCoord(GetTexCoordsForRole("DAMAGER"));
+			tIcon:SetTexture("Interface\\LFGFrame\\UI-LFG-ICON-ROLES");
+			if (VUHDO_ID_MELEE_TANK == tRole) then
+				tIcon:SetTexCoord(GetTexCoordsForRole("TANK"));
+			elseif (VUHDO_ID_RANGED_HEAL == tRole) then
+				tIcon:SetTexCoord(GetTexCoordsForRole("HEALER"));
+			else
+				tIcon:SetTexCoord(GetTexCoordsForRole("DAMAGER"));
+			end
 		end
 		
 		tIcon:Show()
