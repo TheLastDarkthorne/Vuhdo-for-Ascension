@@ -35,12 +35,45 @@ end
 
 
 
+-- Supports used to count as damage: a panel listing damage roles gets the Support group
+-- once, so these players keep a bar. Removing the group afterwards in the options sticks.
+function VUHDO_addSupportToModel(aModel)
+	if (aModel["isSupportChecked"] or not VUHDO_isCoaClient()) then
+		return;
+	end
+	aModel["isSupportChecked"] = true;
+
+	local tGroups = aModel["groups"];
+	if (tGroups == nil) then
+		return;
+	end
+
+	local tLastRole = nil;
+	for tIndex, tId in ipairs(tGroups) do
+		if (tId == VUHDO_ID_SUPPORT) then
+			return;
+		elseif (tId == VUHDO_ID_MELEE_TANK or tId == VUHDO_ID_MELEE_DAMAGE
+			or tId == VUHDO_ID_RANGED_DAMAGE or tId == VUHDO_ID_RANGED_HEAL) then
+			if (tId == VUHDO_ID_MELEE_DAMAGE or tId == VUHDO_ID_RANGED_DAMAGE or tLastRole ~= nil) then
+				tLastRole = tIndex;
+			end
+		end
+	end
+
+	if (tLastRole ~= nil) then
+		tinsert(tGroups, tLastRole + 1, VUHDO_ID_SUPPORT);
+	end
+end
+
+
+
 --
 local tCnt;
 function VUHDO_initPanelModels()
 	twipe(VUHDO_PANEL_MODELS);
 
 	for tCnt = 1, 10 do -- VUHDO_MAX_PANELS
+		VUHDO_addSupportToModel(VUHDO_PANEL_SETUP[tCnt]["MODEL"]);
 		VUHDO_PANEL_MODELS[tCnt] = VUHDO_PANEL_SETUP[tCnt]["MODEL"]["groups"];
 	end
 end
