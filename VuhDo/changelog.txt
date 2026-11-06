@@ -38,6 +38,8 @@ Bugfixes:
 -- Inspecting reads the build the same way the client's inspect window does.
 -- Panels listing damage roles get the Support group once, so supports keep a bar.
 -- The role icon on the bars shows Support instead of damage.
+-- When no panel lists the Support group, supports show in the Ranged DPS group.
+-- The Panel Wizard's Roles layout includes the Support group on the Conquest of Azeroth client.
 -- New command: /vd specs lists what role detection knows about your group.
 
 --------------------------------------------------------------

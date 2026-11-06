@@ -702,6 +702,7 @@ end
 
 --
 local tRole;
+local sIsSupportShown = false;
 local function VUHDO_addUnitToRole(aUnit)
 	if ("player" == aUnit and VUHDO_CONFIG["OMIT_SELF"]) then
 		return;
@@ -710,6 +711,11 @@ local function VUHDO_addUnitToRole(aUnit)
 	tRole = VUHDO_RAID[aUnit]["role"] or 62; -- -- VUHDO_ID_RANGED_DAMAGE
 
 	tinsert(VUHDO_GROUPS[tRole], aUnit);
+
+	-- Without a Support group on any panel, supports would have no bar
+	if (tRole == 64 and not sIsSupportShown) then -- VUHDO_ID_SUPPORT
+		tinsert(VUHDO_GROUPS[62], aUnit); -- VUHDO_ID_RANGED_DAMAGE
+	end
 
 	if(tRole == 63 or tRole == 62 or tRole == 64) then -- VUHDO_ID_RANGED_HEAL -- VUHDO_ID_RANGED_DAMAGE -- VUHDO_ID_SUPPORT
 		tinsert(VUHDO_GROUPS[51], aUnit); -- VUHDO_ID_RANGED
@@ -774,6 +780,7 @@ local function VUHDO_updateGroupArrays(anWasMacroRestore)
 	VUHDO_addUnitToPrivateTanks();
 
 	-- Need MTs for role estimation
+	sIsSupportShown = VUHDO_isModelConfigured(64); -- VUHDO_ID_SUPPORT
 	for tUnit, tInfo in pairs(VUHDO_RAID) do
 		if ("focus" ~= tUnit and "target" ~= tUnit and not tInfo["isPet"]) then
 			VUHDO_addUnitToRole(tUnit);
