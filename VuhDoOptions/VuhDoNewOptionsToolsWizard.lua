@@ -237,6 +237,8 @@ local tNumPanels;
 local function VUHDO_addPanel(aModelInfo)
 	if (aModelInfo ~= nil) then
 		VUHDO_PANEL_SETUP[tNumPanels]["MODEL"].groups = VUHDO_deepCopyTable(aModelInfo["MODEL"]);
+		-- New groups, so check again whether the panel needs the Support group
+		VUHDO_PANEL_SETUP[tNumPanels]["MODEL"]["isSupportChecked"] = nil;
 		aModelInfo["INIT_FUNC"](tNumPanels);
 	end
 end
